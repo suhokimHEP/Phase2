@@ -113,6 +113,7 @@ void Phase2::analyze(const edm::Event& e, const edm::EventSetup& es) {
 }
  hEvents_->Fill(1.);
  tree_->Fill();
+std::cout<<"new event"<<std::endl;
 }
 
 DEFINE_FWK_MODULE(Phase2);
