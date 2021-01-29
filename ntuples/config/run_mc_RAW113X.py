@@ -16,7 +16,7 @@ process.source = cms.Source('PoolSource',
                             fileNames = cms.untracked.vstring(
 
 #'root://cms-xrd-global.cern.ch//store/mc/Phase2HLTTDRWinter20DIGI/WJetsToLNu_TuneCP5_14TeV-amcatnloFXFX-pythia8/GEN-SIM-DIGI-RAW/PU200_110X_mcRun4_realistic_v3-v2/240000/09624B53-125A-624D-AC33-91368C03150B.root',
-'root://cms-xrd-global.cern.ch//store/relval/CMSSW_11_3_0_pre1/RelValTTbar_14TeV/MINIAODSIM/PU_113X_mcRun4_realistic_v1_2026D49PU200-v1/10000/8431138c-f4d9-47e6-bb26-19e9de8fb6f3.root',
+'root://cms-xrd-global.cern.ch//store/relval/CMSSW_11_3_0_pre1/RelValTTbar_14TeV/GEN-SIM-RECO/PU_113X_mcRun4_realistic_v1_2026D49PU200-v1/10000/00c1d9f3-2d0a-4174-9627-cc6391c58dbd.root',
 
  ),
 )
@@ -32,8 +32,8 @@ process.TFileService = cms.Service('TFileService', fileName = cms.string('Relval
 # global tag
 process.load('Configuration.StandardSequences.Services_cff')
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
-process.GlobalTag.globaltag = '111X_mcRun4_realistic_Queue'
-#process.GlobalTag.globaltag = '113X_mcRun4_realistic_v3'
+#process.GlobalTag.globaltag = '111X_mcRun4_realistic_Queue'
+process.GlobalTag.globaltag = '113X_mcRun4_realistic_v3'
 ########################  BadPFMuonFilter
 #process.load('RecoMET.METFilters.BadPFMuonFilter_cfi')
 #process.BadPFMuonFilter.muons = cms.InputTag('slimmedMuons', '', 'PAT')
