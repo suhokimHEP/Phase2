@@ -17,6 +17,9 @@ process.source = cms.Source('PoolSource',
 
 #'root://cms-xrd-global.cern.ch//store/mc/Phase2HLTTDRWinter20DIGI/WJetsToLNu_TuneCP5_14TeV-amcatnloFXFX-pythia8/GEN-SIM-DIGI-RAW/PU200_110X_mcRun4_realistic_v3-v2/240000/09624B53-125A-624D-AC33-91368C03150B.root',
 'root://cms-xrd-global.cern.ch//store/relval/CMSSW_11_3_0_pre1/RelValTTbar_14TeV/GEN-SIM-RECO/PU_113X_mcRun4_realistic_v1_2026D49PU200-v1/10000/00c1d9f3-2d0a-4174-9627-cc6391c58dbd.root',
+'root://cms-xrd-global.cern.ch//store/relval/CMSSW_11_3_0_pre1/RelValTTbar_14TeV/GEN-SIM-RECO/PU_113X_mcRun4_realistic_v1_2026D49PU200-v1/10000/064b738b-5516-4e94-9f84-dc55f27fd533.root',
+'root://cms-xrd-global.cern.ch//store/relval/CMSSW_11_3_0_pre1/RelValTTbar_14TeV/GEN-SIM-RECO/PU_113X_mcRun4_realistic_v1_2026D49PU200-v1/10000/06b2bfb3-a0a9-4390-b85a-66c8a594e87e.root',
+#'root://cms-xrd-global.cern.ch//store/relval/CMSSW_11_3_0_pre1/RelValZEE_14/GEN-SIM-RECO/PU_113X_mcRun4_realistic_v1_2026D49PU200-v1/10000/01d84aad-27f3-46d8-8319-53b06e133ff4.root',
 
  ),
 )
