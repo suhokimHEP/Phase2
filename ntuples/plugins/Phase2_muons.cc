@@ -4,6 +4,8 @@
 #include "DataFormats/Math/interface/LorentzVector.h"
 #include "DataFormats/Math/interface/deltaR.h"
 using namespace std;
+using namespace reco;
+using namespace pat;
 
 // (local) variables associated with tree branches
 Int_t            nMu_                             ; 
@@ -40,6 +42,7 @@ vector<float>    AllTrackPt_;
 vector<float>    AllTrackEta_;
 vector<float>    AllTrackPhi_;
 vector<float>    AllTrackdEdx_;
+vector<float> EtaPhi;
 
 
 
@@ -72,6 +75,7 @@ void Phase2::branchesMuons(TTree* tree) {
  tree->Branch("muPFdBetaIsolation",             &muPFdBetaIsolation_             ) ; 
  tree->Branch("muTrackdR",                     &muTrackdR_                     ) ; 
  tree->Branch("MinmuTrackdR",                     &MinmuTrackdR_                     ) ; 
+ tree->Branch("muEtaPhi",                     &muEtaPhi_                     ) ; 
 }
 
 // initialize branches
@@ -88,9 +92,7 @@ void Phase2::branchesTracks(TTree* tree) {
 
 
 
-
-
-void Phase2::fillMuons(const edm::Event& e, reco::Vertex vtx) {
+void Phase2::fillMuons(const edm::Event& e, reco::Vertex vtx, string Mode) {
 
  // cleanup from previous execution
  nMu_ = 0;
@@ -119,26 +121,28 @@ void Phase2::fillMuons(const edm::Event& e, reco::Vertex vtx) {
  muPFdBetaIsolation_            .clear() ; 
  muTrackdR_                    .clear() ; 
  MinmuTrackdR_=0.;
- edm::Handle<edm::View<pat::Muon> > muonHandle;
+ muEtaPhi_.clear();
+ edm::Handle<edm::View<reco::Muon> > muonHandle;
+ edm::Handle<edm::View<pat::Muon> > slimmuonHandle;
+
+  if(Mode.find("reco")!= std::string::npos){
  e.getByToken(muonCollection_, muonHandle);
+ for (edm::View<reco::Muon>::const_iterator iMu = muonHandle->begin(); iMu != muonHandle->end(); ++iMu) 
 
- if (!muonHandle.isValid()) {
-  edm::LogWarning("Phase2") << "no pat::Muons in event";
-  return;
- }
 
- for (edm::View<pat::Muon>::const_iterator iMu = muonHandle->begin(); iMu != muonHandle->end(); ++iMu) {
-
-  nMu_++;
+{
+  EtaPhi.clear();
   Float_t pt = iMu->pt();
   Float_t eta = iMu->eta();
   Float_t phi = iMu->phi();
 
-  //if (pt < 5) continue;
+  if (pt < 5) continue;
   //if (fabs(eta) > 3.0) continue;
+  //if (fabs(eta) < 1.4) continue;
   if (! (iMu->isPFMuon() || iMu->isGlobalMuon() || iMu->isTrackerMuon())) continue;
 
   const reco::Muon &recoMu = dynamic_cast<const reco::Muon &>(*iMu);
+  nMu_++;
 
   if( !recoMu.innerTrack().isNull() ){
    muNumberOfMissingInnerHits_    .push_back( recoMu.innerTrack ()->hitPattern ().trackerLayersWithoutMeasurement (reco::HitPattern::MISSING_INNER_HITS) ) ; 
@@ -147,8 +151,63 @@ void Phase2::fillMuons(const edm::Event& e, reco::Vertex vtx) {
    muNumberOfValidPixelHits_      .push_back( recoMu.innerTrack ()->hitPattern ().numberOfValidPixelHits       ()   ) ; 
    muTrackerLayersWithMeasurement_.push_back( recoMu.innerTrack ()->hitPattern ().trackerLayersWithMeasurement ()   ) ; 
   }
-  //muNumberOfValidHits_           .push_back( recoMu.innerTrack ()->hitPattern ().trackerLayersWithoutMeasurement (reco::HitPattern::)              ) ; 
-  //muNormalizedChi2_              .push_back( recoMu.globalTrack().normalizedChi2 ()   ) ; 
+
+
+  muPt_    .push_back(pt);
+  muEn_    .push_back(iMu->energy());
+  muEta_   .push_back(iMu->eta());
+  muPhi_   .push_back(iMu->phi());
+  muCharge_.push_back(iMu->charge());
+  muType_  .push_back(iMu->type());
+  EtaPhi.push_back(iMu->eta());
+  EtaPhi.push_back(iMu->phi());
+  muEtaPhi_.push_back(EtaPhi);
+	//	std::cout<<nMu_<<"Eta:"<<EtaPhi.at(0)<<",Phi:"<<EtaPhi.at(1)<<std::endl;
+  muIsGlobalMuon_                .push_back(iMu->  isGlobalMuon () ) ; 
+  muIsPFMuon_                    .push_back(iMu->  isPFMuon     () ) ; 
+
+  Float_t muPFChIso      = iMu->pfIsolationR04().sumChargedHadronPt ;
+  Float_t muPFPhoIso     = iMu->pfIsolationR04().sumPhotonEt        ;
+  Float_t muPFNeuIso     = iMu->pfIsolationR04().sumNeutralHadronEt ;
+  Float_t muPFPUIso      = iMu->pfIsolationR04().sumPUPt            ;
+  Float_t pfdBetaIso     = ( muPFChIso + max(0.0,muPFNeuIso + muPFPhoIso - 0.5*muPFPUIso ) ) / pt ;
+
+  muPFdBetaIsolation_     .push_back( pfdBetaIso     ) ; 
+
+ muTrackdR_.clear();
+ if(AllTrackEta_.size()>0) muTrackdR_ = CalTrackdR(eta,phi);
+ //MinmuTrackdR_ = *min_element(muTrackdR_.begin(), muTrackdR_.end());
+} 
+}
+
+
+
+else {
+ e.getByToken(slimmuonCollection_, slimmuonHandle);
+ for (edm::View<pat::Muon>::const_iterator iMu = slimmuonHandle->begin(); iMu != slimmuonHandle->end(); ++iMu) 
+
+
+{
+  EtaPhi.clear();
+  Float_t pt = iMu->pt();
+  Float_t eta = iMu->eta();
+  Float_t phi = iMu->phi();
+
+  if (pt < 5) continue;
+  //if (fabs(eta) > 3.0) continue;
+  //if (fabs(eta) < 1.4) continue;
+  if (! (iMu->isPFMuon() || iMu->isGlobalMuon() || iMu->isTrackerMuon())) continue;
+
+  const reco::Muon &recoMu = dynamic_cast<const reco::Muon &>(*iMu);
+  nMu_++;
+
+  if( !recoMu.innerTrack().isNull() ){
+   muNumberOfMissingInnerHits_    .push_back( recoMu.innerTrack ()->hitPattern ().trackerLayersWithoutMeasurement (reco::HitPattern::MISSING_INNER_HITS) ) ; 
+   muNumberOfMissingMiddleHits_   .push_back( recoMu.innerTrack ()->hitPattern ().trackerLayersWithoutMeasurement (reco::HitPattern::TRACK_HITS        ) ) ; 
+   muNumberOfMissingOuterHits_    .push_back( recoMu.innerTrack ()->hitPattern ().trackerLayersWithoutMeasurement (reco::HitPattern::MISSING_OUTER_HITS) ) ; 
+   muNumberOfValidPixelHits_      .push_back( recoMu.innerTrack ()->hitPattern ().numberOfValidPixelHits       ()   ) ; 
+   muTrackerLayersWithMeasurement_.push_back( recoMu.innerTrack ()->hitPattern ().trackerLayersWithMeasurement ()   ) ; 
+  }
 
   bool goodGlob = iMu->isGlobalMuon() && 
                   iMu->globalTrack()->normalizedChi2() < 3 && 
@@ -164,11 +223,12 @@ void Phase2::fillMuons(const edm::Event& e, reco::Vertex vtx) {
   muPhi_   .push_back(iMu->phi());
   muCharge_.push_back(iMu->charge());
   muType_  .push_back(iMu->type());
-  // muD0_    .push_back(iMu->muonBestTrack()->dxy(pv));
-  // muDz_    .push_back(iMu->muonBestTrack()->dz(pv));
-  // muSIP_   .push_back(fabs(iMu->dB(pat::Muon::PV3D))/iMu->edB(pat::Muon::PV3D));
-
+  EtaPhi.push_back(iMu->eta());
+  EtaPhi.push_back(iMu->phi());
+  muEtaPhi_.push_back(EtaPhi);
   UShort_t tmpmuIDbit = 0;
+	//	std::cout<<nMu_<<"Eta:"<<EtaPhi.at(0)<<",Phi:"<<EtaPhi.at(1)<<std::endl;
+  if(Mode.find("MiniAOD")!= std::string::npos){
 
   if (iMu->isLooseMuon())     setbit(tmpmuIDbit, 1);
   if (iMu->isMediumMuon())    setbit(tmpmuIDbit, 2);
@@ -178,10 +238,9 @@ void Phase2::fillMuons(const edm::Event& e, reco::Vertex vtx) {
   muIDbit_.push_back(tmpmuIDbit);
 
   muPassHipID_ .push_back( isMedium )   ;
-
+}
   muIsGlobalMuon_                .push_back(iMu->  isGlobalMuon () ) ; 
   muIsPFMuon_                    .push_back(iMu->  isPFMuon     () ) ; 
-  //muIsTightMuonWRTVtx_           .push_back(iMu->  isTightMuonWRTVtx ()  ) ; 
 
   Float_t muPFChIso      = iMu->pfIsolationR04().sumChargedHadronPt ;
   Float_t muPFPhoIso     = iMu->pfIsolationR04().sumPhotonEt        ;
@@ -191,32 +250,52 @@ void Phase2::fillMuons(const edm::Event& e, reco::Vertex vtx) {
 
   muPFdBetaIsolation_     .push_back( pfdBetaIso     ) ; 
 
-//  const pat::PackedCandidate &ppfMu = dynamic_cast<const pat::PackedCandidate &>(*iMu);
-//
-//  if (!ppfMu.vertexRef().isNull() && ppfMu.vertexRef().isAvailable()){
-//   muPVIndex_ .push_back(ppfMu.vertexRef().index());
-//  }
  muTrackdR_.clear();
  if(AllTrackEta_.size()>0) muTrackdR_ = CalTrackdR(eta,phi);
  //MinmuTrackdR_ = *min_element(muTrackdR_.begin(), muTrackdR_.end());
+} 
+}
+ if (!muonHandle.isValid()&&!slimmuonHandle.isValid() ) {
+  edm::LogWarning("Phase2") << "no Muons in event";
+  return;
  }
+
 }
 
 
-void Phase2::fillTracks(const edm::Event& e, const edm::EventSetup& es) {
+void Phase2::fillTracks(const edm::Event& e, const edm::EventSetup& es, string Mode) {
 
  nTrack_=0;
  AllTrackPt_.clear();
  AllTrackEta_.clear();
  AllTrackPhi_.clear();
-edm::Handle<std::vector<pat::IsolatedTrack>   >  TrackHandle;
+edm::Handle<std::vector<reco::Track>   >  TrackHandle;
+edm::Handle<std::vector<pat::IsolatedTrack>   >  isoTrackHandle;
+
+
+  if(Mode.find("reco")!= std::string::npos){
  e.getByToken( TrackLabel_       ,  TrackHandle );
- for (std::vector<pat::IsolatedTrack>::const_iterator itrack = TrackHandle->begin(); itrack != TrackHandle->end(); ++itrack) {
+ for (std::vector<reco::Track>::const_iterator itrack = TrackHandle->begin(); itrack != TrackHandle->end(); ++itrack) {
   nTrack_++;
   Float_t pt = itrack->pt();
   Float_t eta = itrack->eta();
   Float_t phi = itrack->phi();
-  Float_t pfNeutralSum = itrack->pfNeutralSum();
+  //Float_t pfNeutralSum = itrack->pfNeutralSum();
+  AllTrackPt_.push_back(pt);
+  AllTrackEta_.push_back(eta);
+  AllTrackPhi_.push_back(phi);
+
+}
+}
+
+
+else{ e.getByToken( isoTrackLabel_       ,  isoTrackHandle );
+ for (std::vector<pat::IsolatedTrack>::const_iterator itrack = isoTrackHandle->begin(); itrack != isoTrackHandle->end(); ++itrack) {
+  nTrack_++;
+  Float_t pt = itrack->pt();
+  Float_t eta = itrack->eta();
+  Float_t phi = itrack->phi();
+  //Float_t pfNeutralSum = itrack->pfNeutralSum();
   Float_t dEdxPixel = itrack->dEdxPixel();
   AllTrackPt_.push_back(pt);
   AllTrackEta_.push_back(eta);
@@ -226,15 +305,19 @@ edm::Handle<std::vector<pat::IsolatedTrack>   >  TrackHandle;
 }
 }
 
+
+
+}
+
 vector<float> Phase2::CalTrackdR( float jeteta, float jetphi )
 {
  vector<float> idvector;
    for( int i=0; i<(int)AllTrackEta_.size(); i++){
      float tracketa = AllTrackEta_.at(i); 
-       float trackphi = AllTrackPhi_.at(i); 
-         float drt = deltaR( jeteta, jetphi, tracketa, trackphi );
-           idvector.push_back(drt); 
-            }
+     float trackphi = AllTrackPhi_.at(i); 
+     float drt = deltaR( jeteta, jetphi, tracketa, trackphi );
+     idvector.push_back(drt); 
+      }
    return idvector;
 }
 

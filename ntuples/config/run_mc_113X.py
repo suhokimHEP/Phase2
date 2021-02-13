@@ -4,38 +4,43 @@ import FWCore.ParameterSet.Config as cms
 # Setup
 
 # this is the process run by cmsRun
-process = cms.Process('LLDJ')
+process = cms.Process('Phase2')
 #process.options = cms.untracked.PSet( allowUnscheduled = cms.untracked.bool(True) )
 # log output
 process.load('FWCore.MessageLogger.MessageLogger_cfi')
-process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(1000) )  ## number of events -1 does all
+process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )  ## number of events -1 does all
 process.MessageLogger.cerr.FwkReport.reportEvery = 100
 
 # input files
 process.source = cms.Source('PoolSource',
                             fileNames = cms.untracked.vstring(
 
-'root://cms-xrd-global.cern.ch//store/mc/Phase2HLTTDRSummer20ReRECOMiniAOD/WJetsToLNu_TuneCP5_14TeV-amcatnloFXFX-pythia8/GEN-SIM-DIGI-RAW-MINIAOD/NoPU_111X_mcRun4_realistic_T15_v1-v1/100000/00D62BEB-4E52-E243-980F-D473E59EACDE.root',
-#'root://cms-xrd-global.cern.ch//store/mc/Phase2HLTTDRSummer20ReRECOMiniAOD/WJetsToLNu_TuneCP5_14TeV-amcatnloFXFX-pythia8/GEN-SIM-DIGI-RAW-MINIAOD/NoPU_111X_mcRun4_realistic_T15_v1-v1/100000/067F7D95-C15A-B241-A2EA-B0A9AF1C512F.root',
-#'root://cms-xrd-global.cern.ch//store/mc/Phase2HLTTDRSummer20ReRECOMiniAOD/WJetsToLNu_TuneCP5_14TeV-amcatnloFXFX-pythia8/GEN-SIM-DIGI-RAW-MINIAOD/NoPU_111X_mcRun4_realistic_T15_v1-v1/100000/53807AB8-9399-8942-A573-499BA283F18C.root',
-#'root://cms-xrd-global.cern.ch//store/mc/Phase2HLTTDRSummer20ReRECOMiniAOD/WJetsToLNu_TuneCP5_14TeV-amcatnloFXFX-pythia8/GEN-SIM-DIGI-RAW-MINIAOD/PU200_111X_mcRun4_realistic_T15_v1-v1/260000/052F3259-5977-3248-88DF-1C1D50753CE6.root',
-#'root://cms-xrd-global.cern.ch//store/mc/Phase2HLTTDRSummer20ReRECOMiniAOD/WJetsToLNu_TuneCP5_14TeV-amcatnloFXFX-pythia8/GEN-SIM-DIGI-RAW-MINIAOD/PU200_111X_mcRun4_realistic_T15_v1-v1/260000/016F48F9-F967-8E46-B1DF-5B382572DB60.root',
-#'root://cms-xrd-global.cern.ch//store/mc/Phase2HLTTDRSummer20ReRECOMiniAOD/WJetsToLNu_TuneCP5_14TeV-amcatnloFXFX-pythia8/GEN-SIM-DIGI-RAW-MINIAOD/PU200_111X_mcRun4_realistic_T15_v1-v1/260000/06256FC2-7EA3-C245-A04B-DE607D985F5D.root',
+'root://cms-xrd-global.cern.ch//store/relval/CMSSW_11_3_0_pre2/RelValTTbar_14TeV/MINIAODSIM/PU25ns_113X_mcRun4_realistic_v2_2026D49PU200-v2/10000/8cc97538-b52f-4007-9c38-e4f5d875fa32.root',
 
  ),
 )
 # output name
-#process.TFileService = cms.Service('TFileService', fileName = cms.string('lldjntuple_200mc_miniAOD.root'));
-process.TFileService = cms.Service('TFileService', fileName = cms.string('lldjntuple_mc_miniAOD.root'));
-
-# cms geometry
-process.load('Configuration.StandardSequences.GeometryRecoDB_cff')
-process.load('Configuration.StandardSequences.MagneticField_AutoFromDBCurrent_cff')
+process.TFileService = cms.Service('TFileService', fileName = cms.string('EEZMMRelval_MINIAOD.root'));
 
 # global tag
 process.load('Configuration.StandardSequences.Services_cff')
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
-process.GlobalTag.globaltag = '111X_mcRun4_realistic_Queue'
+#process.GlobalTag.globaltag = '111X_mcRun4_realistic_Queue'
+process.GlobalTag.globaltag = '113X_mcRun4_realistic_v3'
+
+
+## cms geometry
+process.load('Configuration.Geometry.GeometryExtended2026D49Reco_cff')
+##process.load('Configuration.StandardSequences.MagneticField_AutoFromDBCurrent_cff')
+#process.load("Geometry.CMSCommonData.cmsIdealGeometryXML_cfi");
+####process.load('Configuration.StandardSequences.GeometryIdeal_cff')
+#process.load('Configuration.StandardSequences.GeometryRecoDB_cff')
+#process.load("Geometry.CaloEventSetup.CaloGeometry_cfi");
+#process.load("Geometry.CaloEventSetup.CaloTopology_cfi");
+##process.load("Configuration.Geometry.GeometryECALHCAL_cff")
+
+
+
 ########################  BadPFMuonFilter
 #process.load('RecoMET.METFilters.BadPFMuonFilter_cfi')
 #process.BadPFMuonFilter.muons = cms.InputTag('slimmedMuons', '', 'PAT')
@@ -70,28 +75,39 @@ process.GlobalTag.globaltag = '111X_mcRun4_realistic_Queue'
 
 #NTuplizer
 process.Phase2 = cms.EDAnalyzer('Phase2',
- doMiniAOD                 = cms.bool(False),
+ doMiniAOD                 = cms.string('MiniAOD'),
  stageL1Trigger = cms.uint32(1),
- #BadChargedCandidateFilter = cms.InputTag('BadChargedCandidateFilter'),
- #BadPFMuonFilter           = cms.InputTag('BadPFMuonFilter'),
- #pfMETLabel                = cms.InputTag('slimmedMETs'),
- triggerResults            = cms.InputTag('TriggerResults', '', 'HLT'),
 
- muonSrc                   = cms.InputTag('slimmedMuons'),
+ triggerResults            = cms.InputTag('TriggerResults', '', 'HLT'),
  patTriggerResults         = cms.InputTag('TriggerResults', '', 'PAT'),
  bits = cms.InputTag("TriggerResults","","HLT"),
  prescales = cms.InputTag("patTrigger"),
  objects = cms.InputTag("selectedPatTrigger"),
- TrackSrc               = cms.InputTag('isolatedTracks', '', 'RECO'),
 
+ slimmuonSrc                   = cms.InputTag('slimmedMuons'),
+ muonSrc                   = cms.InputTag('muons','','RECO'),
 
+ TrackSrc               = cms.InputTag('generalTracks', '', 'RECO'),
+ isoTrackSrc               = cms.InputTag('isolatedTracks', '', 'RECO'),
 
- pileupCollection          = cms.InputTag('slimmedAddPileupInfo'),
+ pileupCollection          = cms.InputTag('addPileupInfo'),
+ slimpileupCollection          = cms.InputTag('slimmedAddPileupInfo'),
+
+ slimVtxLabel                  = cms.InputTag('offlineSlimmedPrimaryVertices'),
  VtxLabel                  = cms.InputTag('offlineSlimmedPrimaryVertices'),
+
  genParticleSrc    = cms.InputTag("genParticles"),
 
+ EESimHitSrc = cms.InputTag('g4SimHits','HGCHitsEE','SIM'),
+ FHSimHitSrc = cms.InputTag('g4SimHits','HGCHitsHEfront','SIM'),
+ BHSimHitSrc = cms.InputTag('g4SimHits','HGCHitsHEback','SIM'),
+ EERecHits = cms.InputTag('HGCalRecHit','HGCEERecHits','RECO'),
+ FHRecHits = cms.InputTag('HGCalRecHit','HGCHEFRecHits','RECO'),
+ BHRecHits = cms.InputTag('HGCalRecHit','HGCHEBRecHits','RECO'),
+ #EERecHits = cms.InputTag('HGCalRecHit:HGCEERecHits'),
+ #FHRecHits = cms.InputTag('HGCalRecHit:HGCHEFRecHits'),
+ #BHRecHits = cms.InputTag('HGCalRecHit:HGCHEBRecHits'),
 
- RechHitSrc = cms.InputTag('g4SimHits','HGCHitsEE','SIM'),
 )
 
 #builds Ntuple

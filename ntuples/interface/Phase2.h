@@ -23,12 +23,9 @@
 #include "DataFormats/PatCandidates/interface/Photon.h"
 #include "DataFormats/RecoCandidate/interface/RecoEcalCandidate.h"
 #include "DataFormats/VertexReco/interface/Vertex.h"
-//#include "HiggsAnalysis/HiggsTo2photons/interface/CiCPhotonID.h"
 #include "DataFormats/PatCandidates/interface/Jet.h"
 #include "DataFormats/PatCandidates/interface/Tau.h"
-#include "CondFormats/JetMETObjects/interface/FactorizedJetCorrector.h"
-#include "JetMETCorrections/Modules/interface/JetResolution.h"
-#include "RecoTracker/Record/interface/NavigationSchoolRecord.h"
+//#include "RecoTracker/Record/interface/NavigationSchoolRecord.h"
 #include "SimDataFormats/CaloHit/interface/PCaloHit.h"
 
 //#include "RecoTracker/DebugTools/interface/GetTrackTrajInfo.h"
@@ -39,13 +36,15 @@
 #include "MagneticField/Engine/interface/MagneticField.h" 
 
 #include "TrackingTools/GeomPropagators/interface/Propagator.h"
-
 #include "TrackingTools/GeomPropagators/interface/StateOnTrackerBound.h"
 #include "TrackingTools/Records/interface/TrackingComponentsRecord.h"
 #include "TrackingTools/Records/interface/TransientTrackRecord.h"
 
 #include "DataFormats/PatCandidates/interface/PackedTriggerPrescales.h"
 #include "DataFormats/PatCandidates/interface/IsolatedTrack.h"
+#include "DataFormats/HGCRecHit/interface/HGCRecHitCollections.h"
+
+
 
 using namespace std;
 
@@ -69,184 +68,68 @@ class Phase2 : public edm::EDAnalyzer {
   //   virtual void endJob() {};
   
   void branchesGlobalEvent (TTree*);
-  void branchesMET         (TTree*);
-  void branchesAODMET      (TTree*);
-  void branchesPhotons     (TTree*);
-  void branchesAODPhotons  (TTree*);
-  void branchesElectrons   (TTree*);
-  void branchesAODElectrons(TTree*);
   void branchesMuons       (TTree*);
-  void branchesAODMuons    (TTree*);
-  void branchesJets        (TTree*);
-  void branchesAODJets     (TTree*);
   void branchesTrigger     (TTree*);
-  void branchesAODTrigger  (TTree*);
   void branchesGenPart     (TTree*);
-  void branchesAODEvent    (TTree*);
   void branchesTracks        (TTree*);
   void branchesRecHit       (TTree*);
 
-  void fillGlobalEvent (const edm::Event&, const edm::EventSetup&);
-  void fillMET         (const edm::Event&, const edm::EventSetup&);
-  void fillAODMET      (const edm::Event&, const edm::EventSetup&);
-  void fillPhotons     (const edm::Event&, const edm::EventSetup&);
-  void fillAODPhotons  (const edm::Event&, const edm::EventSetup&);
-  void fillElectrons   (const edm::Event&, const edm::EventSetup&);
-  void fillAODElectrons(const edm::Event&, const edm::EventSetup&, const reco::Vertex);
-  void fillMuons       (const edm::Event&, const reco::Vertex);
-  void fillAODMuons    (const edm::Event&, const reco::Vertex);
-  void fillJets        (const edm::Event&, const edm::EventSetup&);
-  void fillAODJets     (const edm::Event&, const edm::EventSetup&);
+  void fillGlobalEvent (const edm::Event&, const edm::EventSetup&, string Mode);
+  void fillMuons       (const edm::Event&, const reco::Vertex, string Mode);
   void fillTrigger     (const edm::Event&, const edm::EventSetup&);
-  void fillAODTrigger  (const edm::Event&, const edm::EventSetup&);
   void fillGenPart     (const edm::Event&);
-  void fillAODEvent    (const edm::Event&, const edm::EventSetup&);
-  void fillTracks        (const edm::Event&, const edm::EventSetup&);
-  void fillRecHit   (const edm::Event&, const edm::EventSetup&);
-
-  bool isMediumMuonBCDEF(const reco::Muon & recoMu);
-  bool isMediumMuonGH(const reco::Muon & recoMu);
+  void fillTracks        (const edm::Event&, const edm::EventSetup&, string Mode);
+  void fillRecHit   (const edm::Event&, const edm::EventSetup&, string Mode);
 
   bool doAOD_     ; 
-  bool doMiniAOD_ ; 
+  string doMiniAOD_ ; 
 
   // collections
-  // electrons
-  edm::EDGetTokenT<edm::View<pat::Electron> >      electronCollection_;
-  edm::EDGetTokenT<double>                         rhoLabel_;
-  // elecontr ID decisions objects
-  edm::EDGetTokenT<edm::ValueMap<bool> >  eleVetoIdMapToken_;
-  edm::EDGetTokenT<edm::ValueMap<bool> >  eleLooseIdMapToken_;
-  edm::EDGetTokenT<edm::ValueMap<bool> >  eleMediumIdMapToken_;
-  edm::EDGetTokenT<edm::ValueMap<bool> >  eleTightIdMapToken_;
-  edm::EDGetTokenT<edm::ValueMap<bool> >  eleHLTIdMapToken_;
-  //edm::EDGetTokenT<edm::ValueMap<bool> >  eleHEEPIdMapToken_;
-  //edm::EDGetTokenT<edm::ValueMap<float> > eleMVAValuesMapToken_;
-  //edm::EDGetTokenT<edm::ValueMap<float> > eleMVAHZZValuesMapToken_;
-  //edm::EDGetTokenT<edm::ValueMap<float> > elePFClusEcalIsoToken_;
-  //edm::EDGetTokenT<edm::ValueMap<float> > elePFClusHcalIsoToken_;
-
-  // AOD electrons
-  edm::EDGetToken electronAODToken_;
-  edm::EDGetTokenT<edm::ValueMap<bool> > AOD_eleLooseIdMapToken_;
-  edm::EDGetTokenT<edm::ValueMap<bool> > AOD_eleMediumIdMapToken_;
-  edm::EDGetTokenT<edm::ValueMap<bool> > AOD_eleTightIdMapToken_;
-  edm::EDGetTokenT<reco::ConversionCollection> conversionsAODToken_;
+  // met
+    edm::EDGetTokenT<edm::TriggerResults>            patTrgResultsLabel_;
 
   // global event
   edm::EDGetTokenT<double>                         rhoCentralLabel_;
   edm::EDGetTokenT<vector<PileupSummaryInfo> >     puCollection_;
-  //edm::EDGetTokenT<vector<PileupSummaryInfo> >     AODpuCollection_;
+  edm::EDGetTokenT<vector<PileupSummaryInfo> >     slimpuCollection_;
   edm::EDGetTokenT<reco::VertexCollection>         vtxLabel_;
+  edm::EDGetTokenT<reco::VertexCollection>         slimvtxLabel_;
   edm::EDGetTokenT<edm::TriggerResults>            trgResultsLabel_;
   string                                           trgResultsProcess_;
 
   // beamspot
   edm::EDGetTokenT<reco::BeamSpot>                 beamspotLabel_;
 
-  // jets
-  edm::EDGetTokenT<edm::View<pat::Jet> >           jetsAK4Label_;
-  edm::EDGetTokenT<edm::View<pat::Jet> >           selectedPatJetsLabel_;
-   // AOD Jets
-  edm::EDGetTokenT<edm::View<reco::CaloJet> >      AODak4CaloJetsLabel_;   
-  edm::EDGetTokenT<edm::View<reco::PFJet>   >      AODak4PFJetsLabel_;     
-  edm::EDGetTokenT<edm::View<reco::PFJet>   >      AODak4PFJetsCHSLabel_;  
+  edm::EDGetTokenT<std::vector<reco::Track>  >       TrackLabel_;
+  edm::EDGetTokenT<std::vector<pat::IsolatedTrack>  >       isoTrackLabel_;
+  edm::EDGetTokenT<std::vector<PCaloHit>  >       EESimHitLabel_;
+  edm::EDGetTokenT<std::vector<PCaloHit>  >       FHSimHitLabel_;
+  edm::EDGetTokenT<std::vector<PCaloHit>  >       BHSimHitLabel_;
+  edm::EDGetToken recHitSourceEE_;
+  edm::EDGetToken recHitSourceFH_;
+  edm::EDGetToken recHitSourceBH_;
 
-  //edm::EDGetTokenT<reco::VertexCollection>      AODVertexLabel_;
-  edm::EDGetTokenT<edm::View<reco::Vertex>  >      AODVertexLabel_;
-  edm::EDGetTokenT<edm::View<reco::Track>  >       AODTrackLabel_;
-  //edm::EDGetTokenT<edm::View<pat::IsolatedTrack>  >       TrackLabel_;
-  edm::EDGetTokenT<std::vector<pat::IsolatedTrack>  >       TrackLabel_;
-  edm::EDGetTokenT<std::vector<PCaloHit>  >       RechHitLabel_;
+
+
   const MagneticField*                             magneticField_;
   edm::ESHandle<Propagator>                        thePropagator_;
   //edm::ESHandle<TransientTrackBuilder>             theBuilder_;
 
-  // jet functions
-  vector<int> getJetTrackIndexs( float jeteta, float jetphi);
-  vector<float> CalTrackdR( float jeteta, float jetphi);
-  void calculateAlphaMax( vector<int> jetTrackIDs,
-   float& alphaMax, float& alphaMaxP, float& beta,
-   float& alphaMax2, float& alphaMaxP2, float& beta2);
-  void calculateTrackAngle( vector<int> jetTrackIDs,
-   vector<float> &allTrackAngles,
-   float &totalTrackAngle, float &totalTrackAnglePt);
-  void calculateIP( vector<int> jetTrackIDs,
-   vector<float> &jetIPs, vector<float> &jetIPSigs,
-   float &sumIP, float &sumIPSig);
-
-  float findMedian(vector<float> thevector);
-
-  void calculateDisplacedVertices(const edm::EventSetup& es, vector<int> jetTrackIDs);
-
-  //void deltaVertex3D(GlobalPoint secVert, std::vector<reco::TransientTrack> tracks, double& dEta, double& dPhi, double& pt, double& m, double& energy);
-  //void deltaVertex2D(GlobalPoint secVert, std::vector<reco::TransientTrack> tracks, double& dPhi, double& pt, double& mediandPhi);
-  //vector<reco::TransientTrack> cleanTracks(vector<reco::TransientTrack> tracks, GlobalPoint vertPos);
-  //ctauWeight
-  Float_t calculatectauEventWeight(float dist);
-  // met
-  edm::EDGetTokenT<edm::TriggerResults>            patTrgResultsLabel_;
-  // for MET filters
-  edm::EDGetTokenT<bool> BadChCandFilterToken_;
-  edm::EDGetTokenT<bool> BadPFMuonFilterToken_;
-  edm::EDGetTokenT<edm::View<pat::MET> >           pfMETlabel_;
-  edm::EDGetTokenT<edm::View<reco::CaloMET> >      AODCaloMETlabel_;
-  edm::EDGetTokenT<edm::View<reco::PFMET> >        AODpfChMETlabel_;
-  edm::EDGetTokenT<edm::View<reco::PFMET> >        AODpfMETlabel_;
-
   // muons
-  edm::EDGetTokenT<edm::View<pat::Muon> >          muonCollection_;
-  edm::EDGetTokenT<edm::View<pat::Muon> >          muonAODCollection_;
+  edm::EDGetTokenT<edm::View<reco::Muon> >          muonCollection_;
+  edm::EDGetTokenT<edm::View<pat::Muon> >          slimmuonCollection_;
 
-  // photons
-  edm::EDGetTokenT<edm::View<pat::Photon> >        photonCollection_;
-  //edm::EDGetTokenT<edm::View<pat::Photon> >        photonAODCollection_;
-  edm::EDGetToken photonAODCollection_;
-  
-  // photon ID decision objects and isolations
-  edm::EDGetTokenT<edm::ValueMap<bool> >  phoLooseIdMapToken_;
-  edm::EDGetTokenT<edm::ValueMap<bool> >  phoMediumIdMapToken_;
-  edm::EDGetTokenT<edm::ValueMap<bool> >  phoTightIdMapToken_;
-  edm::EDGetTokenT<edm::ValueMap<float> > phoMVAValuesMapToken_;
-  edm::EDGetTokenT<edm::ValueMap<float> > phoChargedIsolationToken_; 
-  edm::EDGetTokenT<edm::ValueMap<float> > phoNeutralHadronIsolationToken_; 
-  edm::EDGetTokenT<edm::ValueMap<float> > phoPhotonIsolationToken_; 
-  edm::EDGetTokenT<edm::ValueMap<float> > phoWorstChargedIsolationToken_; 
+  //gen
+  edm::EDGetTokenT<vector<reco::GenParticle> >     genParticlesCollection_;
 
-  // AOD photon ID
-  edm::Handle<edm::ValueMap<bool> > loose_id_decisions;
-  edm::EDGetTokenT<edm::ValueMap<bool> > AOD_phoLooseIdMapToken_;
-  edm::InputTag AOD_phoLooseIdLabel_;
-    
-  edm::Handle<edm::ValueMap<bool> > medium_id_decisions;
-  edm::EDGetTokenT<edm::ValueMap<bool> > AOD_phoMediumIdMapToken_;
-  edm::InputTag AOD_phoMediumIdLabel_;
-    
-  edm::Handle<edm::ValueMap<bool> > tight_id_decisions;
-  edm::EDGetTokenT<edm::ValueMap<bool> > AOD_phoTightIdMapToken_;
-  edm::InputTag AOD_phoTightIdLabel_;
-    
-  edm::Handle<edm::ValueMap<float> > AOD_phoChargedIsolationHandle_;
-  edm::EDGetTokenT<edm::ValueMap<float> > AOD_phoChargedIsolationMapToken_;
-  edm::InputTag AOD_phoChargedIsolationLabel_;
-    
-  edm::Handle<edm::ValueMap<float> > AOD_phoNeutralHadronIsolationHandle_;
-  edm::EDGetTokenT<edm::ValueMap<float> > AOD_phoNeutralHadronIsolationMapToken_;
-  edm::InputTag AOD_phoNeutralHadronIsolationLabel_;
-    
-  edm::Handle<edm::ValueMap<float> > AOD_phoPhotonIsolationHandle_;
-  edm::EDGetTokenT<edm::ValueMap<float> > AOD_phoPhotonIsolationMapToken_;
-  edm::InputTag AOD_phoPhotonIsolationLabel_;
-    
-  edm::Handle<edm::ValueMap<float> > AOD_phoWorstChargedIsolationHandle_;
-  edm::EDGetTokenT<edm::ValueMap<float> > AOD_phoWorstChargedIsolationMapToken_;
-  edm::InputTag AOD_phoWorstChargedIsolationLabel_;
 
 
   // trigger
   edm::EDGetTokenT<edm::TriggerResults>                     triggerBits_;
   edm::EDGetTokenT<edm::View<pat::TriggerObjectStandAlone>> triggerObjects_;
   edm::EDGetTokenT<pat::PackedTriggerPrescales>             triggerPrescales_;
+
+
   edm::InputTag AODTriggerLabel_;
   edm::EDGetTokenT<edm::TriggerResults> AODTriggerToken_;
   edm::InputTag AODTriggerEventLabel_;
@@ -257,19 +140,29 @@ class Phase2 : public edm::EDAnalyzer {
   //HLTPrescaleProvider hltPrescale_;
 
 
-  //gen
-  edm::EDGetTokenT<vector<reco::GenParticle> >     genParticlesCollection_;
-
   TTree   *tree_;
   TH1F    *hEvents_;
-  TH1F    *hTTSF_;
-
-  JME::JetResolution            slimmedJetResolution_;
-  JME::JetResolutionScaleFactor slimmedJetResolutionSF_;
-
   // shared between miniAOD jets and AOD jets modules
   edm::Handle<double>                 rhoHandle;
   edm::Handle<reco::VertexCollection> vtxHandle;
+  vector<vector<float>> muEtaPhi_;
+  // jet functions
+  vector<int> getJetTrackIndexs( float jeteta, float jetphi);
+  vector<float> CalTrackdR( float jeteta, float jetphi);
+  void fill_simhit_tree_(const edm::Event& e, const edm::EventSetup&, const std::vector<PCaloHit>& hits);
+  void fill_rechit_tree_(const edm::Event& e, const edm::EventSetup&, const HGCRecHitCollection& hits);
+
+
+
+
+
+
+
+
+
+
+
+
 
 };
 

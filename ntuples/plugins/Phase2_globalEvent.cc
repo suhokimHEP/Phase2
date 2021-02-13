@@ -44,34 +44,30 @@ void Phase2::branchesGlobalEvent(TTree* tree) {
 
 }
 
-void Phase2::fillGlobalEvent(const edm::Event& e, const edm::EventSetup& es) {
+void Phase2::fillGlobalEvent(const edm::Event& e, const edm::EventSetup& es, string Mode) {
 
-  //phoPrescale_.clear();
-
-  //edm::Handle<double> rhoHandle;
-  //e.getByToken(rhoLabel_, rhoHandle);
-
-  //edm::Handle<double> rhoCentralHandle;
-  //e.getByToken(rhoCentralLabel_, rhoCentralHandle);
 
   run_    = e.id().run();
   event_  = e.id().event();
   lumis_  = e.luminosityBlock();
   isData_ = e.isRealData();
-  //rho_    = *(rhoHandle.product());
-  //if (rhoCentralHandle.isValid()) rhoCentral_ = *(rhoCentralHandle.product());
-  //else rhoCentral_ = -99.;
-  //std::cout<<"here1"<<std::endl;
   nTruePU_ = -1 ;
   if (!e.isRealData()) {
    edm::Handle<vector<PileupSummaryInfo> > puInfoHandle;
+  if(Mode.find("MiniAOD") == std::string::npos){
    e.getByToken(puCollection_, puInfoHandle);
+}
+ else {
+   e.getByToken(slimpuCollection_, puInfoHandle);
+}
+
+
    if ( puInfoHandle->size() > 0 ){
     nTruePU_ = puInfoHandle->at(0).getTrueNumInteractions() ;
    }
   }
-  //std::cout<<"here2"<<std::endl;
 
+  if(Mode.find("RAW") == std::string::npos){
   edm::Handle<reco::VertexCollection> vtxHandle;
   e.getByToken(vtxLabel_, vtxHandle);
 
@@ -81,7 +77,6 @@ void Phase2::fillGlobalEvent(const edm::Event& e, const edm::EventSetup& es) {
   {
    nVtx_     = 0;
    nGoodVtx_ = 0;
-  //std::cout<<"here3"<<std::endl;
 
    for (vector<reco::Vertex>::const_iterator v = vtxHandle->begin(); v != vtxHandle->end(); ++v)
    {
@@ -101,5 +96,6 @@ void Phase2::fillGlobalEvent(const edm::Event& e, const edm::EventSetup& es) {
    }
   }
   else {edm::LogWarning("Phase2") << "Primary vertices info not unavailable";}
+  }
 
 }

@@ -30,4 +30,23 @@
 <use name="JetMETCorrections/Modules"/>
 <use name="PhysicsTools/RecoUtils"/>
 
+
+
+
+
+
+<use name="Geometry/HGCalCommonData"/>
+<use name="Geometry/HGCalGeometry"/>
+<use name="Geometry/Records"/>
+
+
+
+
+
+
+
+
+
+
+
 <flags EDM_PLUGIN="1"/>
