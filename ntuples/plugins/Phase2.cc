@@ -16,6 +16,7 @@ Phase2::Phase2(const edm::ParameterSet& ps)
 {  
   lldj_pset_ = ps;
   doMiniAOD_               = ps.getParameter<string>("doMiniAOD");
+  HGCMode_               = ps.getParameter<string>("HGCMode");
   
 
   trgResultsLabel_         = consumes<edm::TriggerResults>           (ps.getParameter<InputTag>("triggerResults"));
@@ -90,12 +91,12 @@ void Phase2::analyze(const edm::Event& e, const edm::EventSetup& es) {
     }   
   }
    fillMuons(e, vtx,doMiniAOD_); //muons use vtx for isolation
-   fillRecHit(e,es,doMiniAOD_);
+   fillHGCalHit(e,es,doMiniAOD_,HGCMode_);
 }
   else if(doMiniAOD_.find("RAW")!= std::string::npos){
    fillGlobalEvent(e, es,doMiniAOD_);
    fillGenPart(e);
-   fillRecHit(e,es,doMiniAOD_);
+   fillHGCalHit(e,es,doMiniAOD_,HGCMode_);
 }
  else {
    fillGlobalEvent(e, es,doMiniAOD_);

@@ -76,6 +76,7 @@ process.load('Configuration.Geometry.GeometryExtended2026D49Reco_cff')
 #NTuplizer
 process.Phase2 = cms.EDAnalyzer('Phase2',
  doMiniAOD                 = cms.string('MiniAOD'),
+ HGCMode                 = cms.string('FH'),
  stageL1Trigger = cms.uint32(1),
 
  triggerResults            = cms.InputTag('TriggerResults', '', 'HLT'),

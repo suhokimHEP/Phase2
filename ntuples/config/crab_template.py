@@ -17,7 +17,7 @@ if __name__ == '__main__':
     #config.JobType.inputFiles         = [INPUTFILES]
     config.JobType.sendExternalFolder = True
     config.JobType.maxMemoryMB        = MAXMEM
-    config.JobType.numCores           = 4
+    config.JobType.numCores           = 8
     #config.JobType.priority           = 50 # default=10, first 10 jobs=20
     config.Data.inputDBS              = 'global'    
     config.Data.splitting             = SPLITTING # 'LumiBased' EventBased, FileBased, LumiBased (1 lumi ~= 300 events)
@@ -29,7 +29,7 @@ if __name__ == '__main__':
 
     #config.Data.useParent             = True
     config.Data.ignoreLocality         = True
-    config.Site.whitelist = ["T2_US*"]
+    config.Site.whitelist = ["T2_*"]
 
     def submit(config):
         try:
@@ -43,7 +43,7 @@ if __name__ == '__main__':
     config.General.requestName = REQUESTNAME
     config.Data.unitsPerJob    = UPERJOB
     config.Data.inputDataset   = DATASET
-    config.Data.lumiMask = LUMIMASK
+    #config.Data.lumiMask = LUMIMASK
     config.Data.outLFNDirBase  = OUTLFNBASE
     p = Process(target=submit, args=(config,))
     p.start()

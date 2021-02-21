@@ -79,10 +79,11 @@ class Phase2 : public edm::EDAnalyzer {
   void fillTrigger     (const edm::Event&, const edm::EventSetup&);
   void fillGenPart     (const edm::Event&);
   void fillTracks        (const edm::Event&, const edm::EventSetup&, string Mode);
-  void fillRecHit   (const edm::Event&, const edm::EventSetup&, string Mode);
+  void fillHGCalHit   (const edm::Event&, const edm::EventSetup&, string Mode, string HGCMode);
 
   bool doAOD_     ; 
   string doMiniAOD_ ; 
+  string HGCMode_ ; 
 
   // collections
   // met

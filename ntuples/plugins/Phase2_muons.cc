@@ -137,8 +137,8 @@ void Phase2::fillMuons(const edm::Event& e, reco::Vertex vtx, string Mode) {
   Float_t phi = iMu->phi();
 
   if (pt < 5) continue;
-  //if (fabs(eta) > 3.0) continue;
-  //if (fabs(eta) < 1.4) continue;
+  if (fabs(eta) > 3.0) continue;
+  if (fabs(eta) < 1.4) continue;
   if (! (iMu->isPFMuon() || iMu->isGlobalMuon() || iMu->isTrackerMuon())) continue;
 
   const reco::Muon &recoMu = dynamic_cast<const reco::Muon &>(*iMu);
@@ -192,10 +192,10 @@ else {
   Float_t pt = iMu->pt();
   Float_t eta = iMu->eta();
   Float_t phi = iMu->phi();
-
   if (pt < 5) continue;
-  //if (fabs(eta) > 3.0) continue;
-  //if (fabs(eta) < 1.4) continue;
+  if (fabs(eta) > 3.0) continue;
+  if (fabs(eta) < 1.4) continue;
+
   if (! (iMu->isPFMuon() || iMu->isGlobalMuon() || iMu->isTrackerMuon())) continue;
 
   const reco::Muon &recoMu = dynamic_cast<const reco::Muon &>(*iMu);
