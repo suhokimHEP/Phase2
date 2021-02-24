@@ -1,4 +1,3 @@
-//#include "FWCore/MessageLogger/interface/MessageLogger.h"
 #include "Phase2/ntuples/interface/Phase2.h"
 #include "SimDataFormats/CaloHit/interface/PCaloHit.h"
 
@@ -22,11 +21,12 @@ typedef ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > LorentzVector;
 
 // AOD ---------------------------------------------
 vector<float>  SimhitEnergy_;
+vector<float>  SimhitLogEnergy_;
 vector<float>  SimhitEMEnergy_;
 vector<float>  SimhitHadEnergy_;
 vector<float>  SimhitMIP_;
 vector<int>  SimhitTrackID_;
-vector<int>  SimhitID_;
+vector<uint32_t>  SimhitID_;
 vector<float>  SimhitTime_;
 vector<int>  SimhitDepth_;
 vector<float>  SimhitGPx_;
@@ -35,6 +35,12 @@ vector<float>  SimhitGPr_;
 vector<float>  SimhitGPz_;
 
 vector<int>  SimhitLayer_;
+
+
+//std::multimap<uint32_t,float> IdAccEn_;
+vector<pair<uint32_t,float>> IdAccEn_;
+
+
 
 vector<float>  HGCRechitEnergy_;
 vector<DetId>  HGCRechitID_;
@@ -50,6 +56,7 @@ vector<float>  muHGCRHmuEta_;
 // initialize branches
 void Phase2::branchesRecHit(TTree* tree) {
   tree->Branch("SimhitEnergy"                   , &SimhitEnergy_);
+  tree->Branch("SimhitLogEnergy"                   , &SimhitLogEnergy_);
   tree->Branch("SimhitEMEnergy"                   , &SimhitEMEnergy_);
   tree->Branch("SimhitHadEnergy"                   , &SimhitHadEnergy_);
   tree->Branch("SimhitMIP"                   , &SimhitMIP_);
@@ -62,6 +69,7 @@ void Phase2::branchesRecHit(TTree* tree) {
   tree->Branch("SimhitGPr"                   , &SimhitGPr_);
   tree->Branch("SimhitGPz"                   , &SimhitGPz_);
   tree->Branch("SimhitLayer"                   , &SimhitLayer_);
+  //tree->Branch("IdAccEn"                   , &IdAccEn_);
   tree->Branch("HGCRechitEnergy"                   , &HGCRechitEnergy_);
   tree->Branch("HGCRechitID"                   , &HGCRechitID_);
   tree->Branch("HGCRechitGP"                   , &HGCRechitGP_);
@@ -127,7 +135,9 @@ else{
 }
 
 void Phase2::fill_simhit_tree_(const edm::Event& event, const edm::EventSetup& es ,const std::vector<PCaloHit>& hits) {
+ // std::cout<<"new event"<<std::endl;
  SimhitEnergy_.clear();
+ SimhitLogEnergy_.clear();
  SimhitEMEnergy_.clear();
  SimhitHadEnergy_.clear();
  SimhitMIP_.clear();
@@ -140,8 +150,11 @@ void Phase2::fill_simhit_tree_(const edm::Event& event, const edm::EventSetup& e
  SimhitGPr_.clear();
  SimhitGPz_.clear();
  SimhitLayer_.clear();
-    edm::ESHandle<CaloGeometry> sgeom;
-    es.get<CaloGeometryRecord>().get(sgeom);
+ IdAccEn_.clear();
+edm::ESHandle<CaloGeometry> sgeom;
+es.get<CaloGeometryRecord>().get(sgeom);
+std::pair <uint32_t,float> IdEn;
+
 
   for (unsigned int i = 0; i < hits.size(); ++i) {
 
@@ -149,22 +162,55 @@ void Phase2::fill_simhit_tree_(const edm::Event& event, const edm::EventSetup& e
   Float_t tempe = hit.energy();
   Float_t tempEM = hit.energyEM();
   Float_t tempHad = hit.energyHad();
-  Float_t tempmip = tempe*10000.;
   Float_t tempt = hit.time();
   Int_t tempTrackID = hit.geantTrackId();
    uint32_t detId = hit.id();
-   DetId detID = DetId(detId);
   uint16_t tempd = hit.depth();
-   //std::cout<<tempd<<std::endl;
-  SimhitEnergy_.push_back(tempe);
   SimhitEMEnergy_.push_back(tempEM);
   SimhitHadEnergy_.push_back(tempHad);
-  SimhitMIP_.push_back(tempmip);
   SimhitTime_.push_back(tempt);
   SimhitTrackID_.push_back(tempTrackID);
   SimhitID_.push_back(detId);
   SimhitDepth_.push_back(tempd);
-    GlobalPoint Position = sgeom->getGeometry(detId)->getPosition();
+   IdEn={}; 
+   IdEn = std::make_pair(detId,tempe);
+    //IdAccEn_.insert(IdEn);
+    IdAccEn_.push_back(IdEn);
+}
+
+//std::multimap<uint32_t,float>::iterator it;
+//vector<pair<uint32_t,float>>::iterator it;
+//std::cout << "mymultimap contains:\n";
+//  for (it=IdAccEn_.begin(); it!=IdAccEn_.end(); ++it)
+//    std::cout << (*it).first << " => " << (*it).second << '\n';
+
+//for (unsigned int i = 0; i<IdAccEn_.size(); ++i)
+//{
+//    std::cout << IdAccEn_.at(i).first << " => " << IdAccEn_.at(i).second << '\n';
+//}
+
+
+for (unsigned int i = 1; i<IdAccEn_.size(); ++i)
+{
+  uint32_t prevIndex = IdAccEn_.at(i-1).first;
+  uint32_t currIndex = IdAccEn_.at(i).first;
+  float prevVal = IdAccEn_.at(i-1).second;
+  float currVal = IdAccEn_.at(i).second;
+   if(prevIndex==currIndex)
+	{IdAccEn_.at(i-1).second = prevVal+currVal;
+	IdAccEn_.erase(IdAccEn_.begin()+i);
+	i = i-1;}
+}
+
+  for (unsigned int i = 0; i < IdAccEn_.size(); ++i) {
+
+   uint32_t AccdetId = IdAccEn_.at(i).first;
+   DetId AccdetID = DetId(AccdetId);
+   float AccEn = IdAccEn_.at(i).second;
+   SimhitEnergy_.push_back(AccEn);
+   SimhitLogEnergy_.push_back(log10(AccEn));
+   
+    GlobalPoint Position = sgeom->getGeometry(AccdetId)->getPosition();
     float px = Position.x();
     float py = Position.y();
     float pz = Position.z();
@@ -174,20 +220,22 @@ void Phase2::fill_simhit_tree_(const edm::Event& event, const edm::EventSetup& e
   SimhitGPr_.push_back(radius);
   SimhitGPz_.push_back(pz);
     unsigned int layer = std::numeric_limits<unsigned int>::max();
-    if (detID.det() == DetId::HGCalEE || detID.det() == DetId::HGCalHSi) {
-    layer = HGCSiliconDetId(detID).layer();
+    if (AccdetID.det() == DetId::HGCalEE || AccdetID.det() == DetId::HGCalHSi) {
+    layer = HGCSiliconDetId(AccdetID).layer();
          } 
-    else if (detID.det() == DetId::HGCalHSc) {
-    layer = HGCScintillatorDetId(detID).layer();
+    else if (AccdetID.det() == DetId::HGCalHSc) {
+    layer = HGCScintillatorDetId(AccdetID).layer();
   	}
 
    // HGCScintillatorDetId tempnum = HGCScintillatorDetId(detId).layer(); 
    // HGCSiliconDetId tempnum = HGCSiliconDetId(detId).layer(); 
    // int templay = int(tempnum);
   SimhitLayer_.push_back(layer);
+  
 }
 
-}
+}	
+
 
 void Phase2::fill_rechit_tree_(const edm::Event& event, const edm::EventSetup& es ,const HGCRecHitCollection& hits) {
 
@@ -222,7 +270,6 @@ void Phase2::fill_rechit_tree_(const edm::Event& event, const edm::EventSetup& e
     HGCRechitGP_.push_back(Position);   
     HGCRechitEta_.push_back(eta);
     HGCRechitPhi_.push_back(phi);
-    //HGCRechitLayer_.push_back(layer);   
 
     int ithickness = rhtools_.getSiThickIndex(detId);
     HGCRechitSithick_.push_back(ithickness);   

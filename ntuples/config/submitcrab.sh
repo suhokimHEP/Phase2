@@ -30,7 +30,7 @@ samples=( \
 # loop over mc samples
 for samplename in ${samples[@]}
 do
- datasetname="/RelValTTbar_14TeV/CMSSW_11_3_0_pre1-PU_113X_mcRun4_realistic_v1_2026D49PU200-v1/GEN-SIM-RECO"
+ datasetname="/RelValZMM_14/CMSSW_11_3_0_pre2-PU25ns_113X_mcRun4_realistic_v2_2026D49PU200-v2/GEN-SIM-RECO"
 
  submitname="submit_${samplename}"
  submitfile="${thesubdir}/${submitname}.py"
