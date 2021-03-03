@@ -22,9 +22,9 @@ typedef ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > LorentzVector;
 // AOD ---------------------------------------------
 vector<float>  SimhitEnergy_;
 vector<float>  SimhitLogEnergy_;
-vector<float>  SimhitEMEnergy_;
-vector<float>  SimhitHadEnergy_;
-vector<float>  SimhitMIP_;
+vector<float>  SimhitSeparateEnergy_;
+vector<float>  SimhitSeparateEMEnergy_;
+vector<float>  SimhitSeparateHadEnergy_;
 vector<int>  SimhitTrackID_;
 vector<uint32_t>  SimhitID_;
 vector<float>  SimhitTime_;
@@ -57,9 +57,9 @@ vector<float>  muHGCRHmuEta_;
 void Phase2::branchesRecHit(TTree* tree) {
   tree->Branch("SimhitEnergy"                   , &SimhitEnergy_);
   tree->Branch("SimhitLogEnergy"                   , &SimhitLogEnergy_);
-  tree->Branch("SimhitEMEnergy"                   , &SimhitEMEnergy_);
-  tree->Branch("SimhitHadEnergy"                   , &SimhitHadEnergy_);
-  tree->Branch("SimhitMIP"                   , &SimhitMIP_);
+  tree->Branch("SimhitSeparateEnergy"                   , &SimhitSeparateEnergy_);
+  tree->Branch("SimhitSeparateEMEnergy"                   , &SimhitSeparateEMEnergy_);
+  tree->Branch("SimhitSeparateHadEnergy"                   , &SimhitSeparateHadEnergy_);
   tree->Branch("SimhitTrackID"                   , &SimhitTrackID_);
   tree->Branch("SimhitID"                   , &SimhitID_);
   tree->Branch("SimhitTime"                   , &SimhitTime_);
@@ -135,12 +135,11 @@ else{
 }
 
 void Phase2::fill_simhit_tree_(const edm::Event& event, const edm::EventSetup& es ,const std::vector<PCaloHit>& hits) {
- // std::cout<<"new event"<<std::endl;
  SimhitEnergy_.clear();
  SimhitLogEnergy_.clear();
- SimhitEMEnergy_.clear();
- SimhitHadEnergy_.clear();
- SimhitMIP_.clear();
+ SimhitSeparateEnergy_.clear();
+ SimhitSeparateEMEnergy_.clear();
+ SimhitSeparateHadEnergy_.clear();
  SimhitTrackID_.clear();
  SimhitID_.clear();
  SimhitTime_.clear();
@@ -166,8 +165,9 @@ std::pair <uint32_t,float> IdEn;
   Int_t tempTrackID = hit.geantTrackId();
    uint32_t detId = hit.id();
   uint16_t tempd = hit.depth();
-  SimhitEMEnergy_.push_back(tempEM);
-  SimhitHadEnergy_.push_back(tempHad);
+  SimhitSeparateEnergy_.push_back(tempe);
+  SimhitSeparateEMEnergy_.push_back(tempEM);
+  SimhitSeparateHadEnergy_.push_back(tempHad);
   SimhitTime_.push_back(tempt);
   SimhitTrackID_.push_back(tempTrackID);
   SimhitID_.push_back(detId);
