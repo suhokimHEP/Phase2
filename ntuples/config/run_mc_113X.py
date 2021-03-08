@@ -15,12 +15,12 @@ process.MessageLogger.cerr.FwkReport.reportEvery = 100
 process.source = cms.Source('PoolSource',
                             fileNames = cms.untracked.vstring(
 
-'root://cms-xrd-global.cern.ch//store/relval/CMSSW_11_3_0_pre2/RelValTTbar_14TeV/MINIAODSIM/PU25ns_113X_mcRun4_realistic_v2_2026D49PU200-v2/10000/8cc97538-b52f-4007-9c38-e4f5d875fa32.root',
+'root://cms-xrd-global.cern.ch//store/mc/Phase2HLTTDRSummer20ReRECOMiniAOD/WJetsToLNu_TuneCP5_14TeV-amcatnloFXFX-pythia8/GEN-SIM-DIGI-RAW-MINIAOD/PU200_111X_mcRun4_realistic_T15_v1-v1/260000/016F48F9-F967-8E46-B1DF-5B382572DB60.root',
 
  ),
 )
 # output name
-process.TFileService = cms.Service('TFileService', fileName = cms.string('EEZMMRelval_MINIAOD.root'));
+process.TFileService = cms.Service('TFileService', fileName = cms.string('BHWJets_MINIAOD.root'));
 
 # global tag
 process.load('Configuration.StandardSequences.Services_cff')
@@ -76,7 +76,7 @@ process.load('Configuration.Geometry.GeometryExtended2026D49Reco_cff')
 #NTuplizer
 process.Phase2 = cms.EDAnalyzer('Phase2',
  doMiniAOD                 = cms.string('MiniAOD'),
- HGCMode                 = cms.string('FH'),
+ HGCMode                 = cms.string('BH'),
  stageL1Trigger = cms.uint32(1),
 
  triggerResults            = cms.InputTag('TriggerResults', '', 'HLT'),

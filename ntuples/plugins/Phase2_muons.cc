@@ -176,7 +176,7 @@ void Phase2::fillMuons(const edm::Event& e, reco::Vertex vtx, string Mode) {
 
  muTrackdR_.clear();
  if(AllTrackEta_.size()>0) muTrackdR_ = CalTrackdR(eta,phi);
- //MinmuTrackdR_ = *min_element(muTrackdR_.begin(), muTrackdR_.end());
+ MinmuTrackdR_ = *min_element(muTrackdR_.begin(), muTrackdR_.end());
 } 
 }
 
@@ -252,7 +252,7 @@ else {
 
  muTrackdR_.clear();
  if(AllTrackEta_.size()>0) muTrackdR_ = CalTrackdR(eta,phi);
- //MinmuTrackdR_ = *min_element(muTrackdR_.begin(), muTrackdR_.end());
+ MinmuTrackdR_ = *min_element(muTrackdR_.begin(), muTrackdR_.end());
 } 
 }
  if (!muonHandle.isValid()&&!slimmuonHandle.isValid() ) {
@@ -316,7 +316,9 @@ vector<float> Phase2::CalTrackdR( float jeteta, float jetphi )
      float tracketa = AllTrackEta_.at(i); 
      float trackphi = AllTrackPhi_.at(i); 
      float drt = deltaR( jeteta, jetphi, tracketa, trackphi );
+     if(drt>0.0){
      idvector.push_back(drt); 
+	}
       }
    return idvector;
 }
