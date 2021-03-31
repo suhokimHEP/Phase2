@@ -1,19 +1,19 @@
 #include "Phase2/ntuples/interface/Phase2.h"
-#include "SimDataFormats/CaloHit/interface/PCaloHit.h"
+//#include "SimDataFormats/CaloHit/interface/PCaloHit.h"
 
 #include "RecoLocalCalo/HGCalRecAlgos/interface/RecHitTools.h"
-#include "DataFormats/HGCRecHit/interface/HGCRecHitCollections.h"
-#include "DataFormats/ForwardDetId/interface/HGCSiliconDetId.h"
 
 #include "Geometry/HGCalGeometry/interface/HGCalGeometry.h"
 #include "Geometry/CaloGeometry/interface/CaloGeometry.h"
 #include "Geometry/Records/interface/IdealGeometryRecord.h"
 #include "Geometry/Records/interface/CaloGeometryRecord.h"
+#include "Geometry/Records/interface/HGCalGeometryRecord.h"
 
+//#include "DataFormats/HGCRecHit/interface/HGCRecHitCollections.h"
+#include "DataFormats/ForwardDetId/interface/HGCSiliconDetId.h"
 #include "DataFormats/DetId/interface/DetId.h"
 #include "DataFormats/ForwardDetId/interface/HGCalDetId.h"
 #include "DataFormats/ForwardDetId/interface/HGCScintillatorDetId.h"
-
 #include "DataFormats/Math/interface/deltaR.h"
 using namespace std;
 using namespace hgcal;
@@ -33,13 +33,10 @@ vector<float>  SimhitGPx_;
 vector<float>  SimhitGPy_;
 vector<float>  SimhitGPr_;
 vector<float>  SimhitGPz_;
-
 vector<int>  SimhitLayer_;
 
 
-//std::multimap<uint32_t,float> IdAccEn_;
 vector<pair<uint32_t,float>> IdAccEn_;
-
 
 
 vector<float>  HGCRechitEnergy_;
@@ -47,12 +44,23 @@ vector<DetId>  HGCRechitID_;
 vector<GlobalPoint>  HGCRechitGP_;
 vector<float>  HGCRechitEta_;
 vector<float>  HGCRechitPhi_;
+vector<tuple<float,float,float,int>> HGCRechitEnEtaPhiLayer_;
 vector<int>  HGCRechitLayer_;
 vector<int>  HGCRechitSithick_;
 
 vector<float>  muHGCRHEn_;
+vector<int>  muHGCRHLayer_;
 vector<float>  muHGCRHdR_;
-vector<float>  muHGCRHmuEta_;
+
+vector<DetId>  muPropId_;
+vector<DetId>  RechitId_;
+vector<pair<uint32_t,float>> recIdEn_;
+vector<pair<uint32_t,float>> recIdEta_;
+
+vector<float> MatchedSimE_;
+vector<float> MatchedRecE_;
+vector<int> MatchedELayer_;
+
 // initialize branches
 void Phase2::branchesRecHit(TTree* tree) {
   tree->Branch("SimhitEnergy"                   , &SimhitEnergy_);
@@ -78,14 +86,16 @@ void Phase2::branchesRecHit(TTree* tree) {
   tree->Branch("HGCRechitLayer"                   , &HGCRechitLayer_);
   tree->Branch("HGCRechitSithick"                   , &HGCRechitSithick_);
   tree->Branch("muHGCRHEn"                   , &muHGCRHEn_);
+  tree->Branch("muHGCRHLayer"                   , &muHGCRHLayer_);
   tree->Branch("muHGCRHdR"                   , &muHGCRHdR_);
-  tree->Branch("muHGCRHmuEta"                   , &muHGCRHmuEta_);
+  tree->Branch("MatchedSimE"                   , &MatchedSimE_);
+  tree->Branch("MatchedRecE"                   , &MatchedRecE_);
+  tree->Branch("MatchedELayer"                   , &MatchedELayer_);
 }
 
 void Phase2::fillHGCalHit(const edm::Event& e, const edm::EventSetup& es, string Mode, string HGCMode) {
 TString Whichendcap;
 Whichendcap = HGCMode;
-
 edm::Handle<std::vector<PCaloHit>   >  EESimHitHandle;
 edm::Handle<std::vector<PCaloHit>   >  FHSimHitHandle;
 edm::Handle<std::vector<PCaloHit>   >  BHSimHitHandle;
@@ -131,6 +141,8 @@ else{
    fill_rechit_tree_(e,es, *handleTheRecHitsBH);
 
 }
+
+SimRecMatch(IdAccEn_,recIdEn_,MatchedSimE_,MatchedRecE_,SimhitLayer_,MatchedELayer_);
 }
 }
 
@@ -177,17 +189,6 @@ std::pair <uint32_t,float> IdEn;
     //IdAccEn_.insert(IdEn);
     IdAccEn_.push_back(IdEn);
 }
-
-//std::multimap<uint32_t,float>::iterator it;
-//vector<pair<uint32_t,float>>::iterator it;
-//std::cout << "mymultimap contains:\n";
-//  for (it=IdAccEn_.begin(); it!=IdAccEn_.end(); ++it)
-//    std::cout << (*it).first << " => " << (*it).second << '\n';
-
-//for (unsigned int i = 0; i<IdAccEn_.size(); ++i)
-//{
-//    std::cout << IdAccEn_.at(i).first << " => " << IdAccEn_.at(i).second << '\n';
-//}
 
 
 for (unsigned int i = 1; i<IdAccEn_.size(); ++i)
@@ -244,14 +245,24 @@ void Phase2::fill_rechit_tree_(const edm::Event& event, const edm::EventSetup& e
  HGCRechitGP_.clear();
  HGCRechitEta_.clear();
  HGCRechitPhi_.clear();
+ HGCRechitEnEtaPhiLayer_.clear();
  HGCRechitLayer_.clear();
  HGCRechitSithick_.clear();
  muHGCRHEn_.clear();
+ muHGCRHLayer_.clear();
  muHGCRHdR_.clear();
- muHGCRHmuEta_.clear();
+ muPropId_.clear();
+ RechitId_.clear();
+ recIdEn_.clear();
+ recIdEta_.clear();
+ std::pair <uint32_t,float> Idvar;
+
     edm::ESHandle<CaloGeometry> geom;
     es.get<CaloGeometryRecord>().get(geom);
-    //es.get<IdealGeometryRecord>().get(geom);
+    edm::ESHandle<HGCalGeometry> BHgeom;
+    es.get<IdealGeometryRecord>().get("HGCalHEScintillatorSensitive",BHgeom);
+    const HGCalGeometry* geom0BH = BHgeom.product();
+    DetId mudetID;
     RecHitTools rhtools_;
     rhtools_.setGeometry(*geom);
   for (unsigned int i = 0; i < hits.size(); ++i) {
@@ -259,12 +270,15 @@ void Phase2::fill_rechit_tree_(const edm::Event& event, const edm::EventSetup& e
     const HGCRecHit& hit = hits[i];
     float Energy = hit.energy();
     DetId detId = hit.detid();
+    //std::cout<<"rechitID:"<<detId.rawId()<<",rechitEnergy:"<<Energy<<std::endl;
+    RechitId_.push_back(detId);
     //GlobalPoint Position = geom->getGeometry(detId)->getPosition();
+    //const Surface sur = geom->surface();
     GlobalPoint Position = rhtools_.getPosition(detId);
+    //std::cout<<"rechitPosition:"<<Position<<std::endl;
     float eta = Position.eta();
     float phi = Position.phi();
-
-
+    
     HGCRechitEnergy_.push_back(Energy);
     HGCRechitID_.push_back(detId);
     HGCRechitGP_.push_back(Position);   
@@ -275,24 +289,84 @@ void Phase2::fill_rechit_tree_(const edm::Event& event, const edm::EventSetup& e
     HGCRechitSithick_.push_back(ithickness);   
     int ilayer = rhtools_.getLayerWithOffset(detId);
     HGCRechitLayer_.push_back(ilayer);   
+    HGCRechitEnEtaPhiLayer_.push_back(make_tuple(Energy,eta,phi,ilayer));
 
-  for (unsigned int j = 0; j < muEtaPhi_.size(); ++j) {
-    float muEta = muEtaPhi_.at(j).at(0);
-    float muPhi = muEtaPhi_.at(j).at(1);
-    float drt = deltaR( eta, phi, muEta, muPhi );
-//    if(drt<.1){
-muHGCRHEn_.push_back(Energy);	
-muHGCRHdR_.push_back(drt);	
-muHGCRHmuEta_.push_back(muEta);	
-//	}
-	}
-
-
-
-
-
-
-    }
+   Idvar={}; 
+   Idvar = std::make_pair(detId.rawId(),Energy);
+    recIdEn_.push_back(Idvar);
+   Idvar={}; 
+   Idvar = std::make_pair(detId.rawId(),eta);
+    recIdEta_.push_back(Idvar);
+	 }
   
+
+   // vector<GlobalPoint> muhittemp;
+    GlobalPoint temp;
+    float mueta;
+    float muphi;
+    float rechiten ;
+    float rechiteta ;
+    float rechitphi ;
+    int rechitlayer ;
+    float muhitdR;
+  for (unsigned int l = 0; l < MuPropTrkHit_.size(); ++l) {
+    temp = MuPropTrkHit_[l];
+    mudetID=geom0BH->getClosestCell(temp); 
+    muPropId_.push_back(mudetID);
+    mueta = -999.;
+    muphi = -999.;
+    mueta = temp.eta();
+    muphi = temp.phi();
+    int layer = l % 14;	
+    layer += 37;
+     //std::cout<<layer<<":---------Layer"<<std::endl;
+  for (unsigned int j = 0; j < HGCRechitEnEtaPhiLayer_.size(); ++j) {
+    rechitlayer  = get<3>(HGCRechitEnEtaPhiLayer_[j]);
+     //std::cout<<rechitlayer<<":rechitlayer"<<std::endl;
+	if(layer==rechitlayer){
+
+    rechiten = -999.;
+    rechiteta = -999.;
+    rechitphi = -999.;
+    muhitdR = -999.;
+    rechiten   = get<0>(HGCRechitEnEtaPhiLayer_[j]);
+    rechiteta  = get<1>(HGCRechitEnEtaPhiLayer_[j]);
+    rechitphi  = get<2>(HGCRechitEnEtaPhiLayer_[j]);
+    muhitdR = deltaR(mueta,muphi,rechiteta,rechitphi); 	
+    muHGCRHEn_.push_back(rechiten);
+    muHGCRHLayer_.push_back(rechitlayer);
+    muHGCRHdR_.push_back(muhitdR);
+	}
+	}
+	}
 }
 
+
+
+void Phase2::SimRecMatch( vector<pair<uint32_t,float>> simpair, vector<pair<uint32_t,float>> recpair, vector<float>& simE, vector<float>& recE, vector<int> SimLayer, vector<int>& Layer)
+{
+ simE.clear();
+ recE.clear();
+ Layer.clear();
+
+
+for (unsigned int i = 0; i<simpair.size(); ++i)
+{ 
+uint32_t x = simpair.at(i).first;
+for (unsigned int j = 0; j<recpair.size(); ++j)
+{
+uint32_t y = recpair.at(j).first;
+if(x==y) 
+{
+
+simE.push_back(simpair.at(i).second);
+recE.push_back(recpair.at(j).second);
+Layer.push_back(SimLayer.at(i));
+
+}
+}
+
+
+}
+
+}

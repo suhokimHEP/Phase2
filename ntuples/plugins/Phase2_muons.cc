@@ -1,8 +1,21 @@
-#include "DataFormats/MuonReco/interface/MuonSelectors.h"
 #include "Phase2/ntuples/interface/Phase2.h"
-#include "DataFormats/PatCandidates/interface/IsolatedTrack.h"
+
+#include "DataFormats/MuonReco/interface/MuonSelectors.h"
+//#include "DataFormats/PatCandidates/interface/IsolatedTrack.h"
 #include "DataFormats/Math/interface/LorentzVector.h"
 #include "DataFormats/Math/interface/deltaR.h"
+
+#include "DataFormats/GeometrySurface/interface/Surface.h"
+#include "DataFormats/GeometrySurface/interface/Plane.h"
+#include "DataFormats/GeometrySurface/interface/PlaneBuilder.h"
+//#include "MagneticField/Records/interface/IdealMagneticFieldRecord.h"
+//#include "TrackingTools/GeomPropagators/interface/Propagator.h"
+#include "TrackingTools/TrajectoryState/interface/FreeTrajectoryState.h"
+#include "TrackingTools/TrajectoryState/interface/TrajectoryStateOnSurface.h"
+#include "TrackingTools/GeomPropagators/interface/PropagationExceptions.h"
+#include "Geometry/HGCalGeometry/interface/HGCalGeometry.h"
+
+
 using namespace std;
 using namespace reco;
 using namespace pat;
@@ -33,20 +46,19 @@ vector<int>     muIsPFMuon_                       ;
 vector<float>   muPFdBetaIsolation_               ; 
 vector<float>   muTrackdR_               ; 
 float   MinmuTrackdR_               ; 
+vector<float>     nValidmuProp_                   ; 
+vector<float>     NegnValidmuProp_                   ; 
+
 
 Int_t nTrack_;
-
 vector<TVector3> AllTrackPositions; // x,y,z
-
 vector<float>    AllTrackPt_;
 vector<float>    AllTrackEta_;
 vector<float>    AllTrackPhi_;
 vector<float>    AllTrackdEdx_;
+
+
 vector<float> EtaPhi;
-
-
-
-
 
 void Phase2::branchesMuons(TTree* tree) {
  tree->Branch("nMu",                            &nMu_                            ) ; 
@@ -75,7 +87,10 @@ void Phase2::branchesMuons(TTree* tree) {
  tree->Branch("muPFdBetaIsolation",             &muPFdBetaIsolation_             ) ; 
  tree->Branch("muTrackdR",                     &muTrackdR_                     ) ; 
  tree->Branch("MinmuTrackdR",                     &MinmuTrackdR_                     ) ; 
+ tree->Branch("nValidmuProp",                            &nValidmuProp_                            ) ; 
+ tree->Branch("NegnValidmuProp",                            &NegnValidmuProp_                            ) ; 
  tree->Branch("muEtaPhi",                     &muEtaPhi_                     ) ; 
+  tree->Branch("MuPropTrkHit"                   , &MuPropTrkHit_);
 }
 
 // initialize branches
@@ -92,7 +107,7 @@ void Phase2::branchesTracks(TTree* tree) {
 
 
 
-void Phase2::fillMuons(const edm::Event& e, reco::Vertex vtx, string Mode) {
+void Phase2::fillMuons(const edm::Event& e, const edm::EventSetup& es,reco::Vertex vtx, string Mode) {
 
  // cleanup from previous execution
  nMu_ = 0;
@@ -120,27 +135,48 @@ void Phase2::fillMuons(const edm::Event& e, reco::Vertex vtx, string Mode) {
  //muIsTightMuonWRTVtx_           .clear() ; 
  muPFdBetaIsolation_            .clear() ; 
  muTrackdR_                    .clear() ; 
+ nValidmuProp_                 .clear() ; 
+ NegnValidmuProp_                 .clear() ; 
  MinmuTrackdR_=0.;
+ MuPropTrkHit_.clear();
  muEtaPhi_.clear();
+
+
+
+
+
+
  edm::Handle<edm::View<reco::Muon> > muonHandle;
  edm::Handle<edm::View<pat::Muon> > slimmuonHandle;
-
+ edm::ESHandle<MagneticField> magneticField;
   if(Mode.find("reco")!= std::string::npos){
  e.getByToken(muonCollection_, muonHandle);
+// Magnetic field
+  es.get<IdealMagneticFieldRecord>().get(magneticField);
+   magneticField_ = &*magneticField;
+// propagator
+  std::string thePropagatorName_ = "PropagatorWithMaterial";
+  es.get<TrackingComponentsRecord>().get(thePropagatorName_,thePropagator_);
+  GlobalVector zLocal(0,0,1);
+  GlobalVector yLocal(0,0,0);
+  GlobalVector xLocal(0,0,0);
+  Surface::RotationType rot(xLocal, yLocal, zLocal);
+  vector<float> zaxis = {411.099,416.549,422,427.449,436,444.549,453.099,461.65,470.199,478.75,487.299,495.849,504.4,512.949};
+  TrajectoryStateOnSurface firstTry;
+  GlobalPoint muatSur;
  for (edm::View<reco::Muon>::const_iterator iMu = muonHandle->begin(); iMu != muonHandle->end(); ++iMu) 
-
-
 {
+  float validmuprop=0.;
+  float negvalidmuprop=0.;
   EtaPhi.clear();
   Float_t pt = iMu->pt();
   Float_t eta = iMu->eta();
   Float_t phi = iMu->phi();
-
-  if (pt < 5) continue;
+  FreeTrajectoryState fts;
+  if (pt < 20) continue;
   if (fabs(eta) > 3.0) continue;
   if (fabs(eta) < 1.4) continue;
   if (! (iMu->isPFMuon() || iMu->isGlobalMuon() || iMu->isTrackerMuon())) continue;
-
   const reco::Muon &recoMu = dynamic_cast<const reco::Muon &>(*iMu);
   nMu_++;
 
@@ -162,7 +198,6 @@ void Phase2::fillMuons(const edm::Event& e, reco::Vertex vtx, string Mode) {
   EtaPhi.push_back(iMu->eta());
   EtaPhi.push_back(iMu->phi());
   muEtaPhi_.push_back(EtaPhi);
-	//	std::cout<<nMu_<<"Eta:"<<EtaPhi.at(0)<<",Phi:"<<EtaPhi.at(1)<<std::endl;
   muIsGlobalMuon_                .push_back(iMu->  isGlobalMuon () ) ; 
   muIsPFMuon_                    .push_back(iMu->  isPFMuon     () ) ; 
 
@@ -171,9 +206,35 @@ void Phase2::fillMuons(const edm::Event& e, reco::Vertex vtx, string Mode) {
   Float_t muPFNeuIso     = iMu->pfIsolationR04().sumNeutralHadronEt ;
   Float_t muPFPUIso      = iMu->pfIsolationR04().sumPUPt            ;
   Float_t pfdBetaIso     = ( muPFChIso + max(0.0,muPFNeuIso + muPFPhoIso - 0.5*muPFPUIso ) ) / pt ;
-
   muPFdBetaIsolation_     .push_back( pfdBetaIso     ) ; 
-
+  fts = FreeTrajectoryState(  GlobalPoint( iMu->vx(), iMu->vy(), iMu->vz()),
+                                    GlobalVector(iMu->px(), iMu->py(), iMu->pz()),
+                                    iMu->charge(),
+                                    magneticField_);
+ for (int i=0; i<(int)zaxis.size(); ++i){
+  GlobalPoint Layer(0,0,zaxis.at(i)); 
+  PlaneBuilder::ReturnType surface = PlaneBuilder().plane(Layer, rot);
+  firstTry = thePropagator_->propagate(fts,*surface);
+  if(!firstTry.isValid()) continue;
+  validmuprop+=1.;
+  muatSur = firstTry.globalPosition();
+  //std::cout<<muatSur<<std::endl;
+MuPropTrkHit_.push_back(muatSur);
+  }
+ for (int i=0; i<(int)zaxis.size(); ++i){
+float negzaxis = -1*zaxis.at(i);
+GlobalPoint Layer(0,0,negzaxis); 
+  PlaneBuilder::ReturnType surface = PlaneBuilder().plane(Layer, rot);
+firstTry = thePropagator_->propagate(fts,*surface);
+  if(!firstTry.isValid()) continue;
+  negvalidmuprop+=1.;
+ muatSur = firstTry.globalPosition();
+ //std::cout<<muatSur<<std::endl;
+MuPropTrkHit_.push_back(muatSur);
+}
+ nValidmuProp_.push_back(validmuprop);
+ NegnValidmuProp_.push_back(negvalidmuprop);
+ 
  muTrackdR_.clear();
  if(AllTrackEta_.size()>0) muTrackdR_ = CalTrackdR(eta,phi);
  MinmuTrackdR_ = *min_element(muTrackdR_.begin(), muTrackdR_.end());
@@ -185,14 +246,12 @@ void Phase2::fillMuons(const edm::Event& e, reco::Vertex vtx, string Mode) {
 else {
  e.getByToken(slimmuonCollection_, slimmuonHandle);
  for (edm::View<pat::Muon>::const_iterator iMu = slimmuonHandle->begin(); iMu != slimmuonHandle->end(); ++iMu) 
-
-
 {
   EtaPhi.clear();
   Float_t pt = iMu->pt();
   Float_t eta = iMu->eta();
   Float_t phi = iMu->phi();
-  if (pt < 5) continue;
+  if (pt < 25) continue;
   if (fabs(eta) > 3.0) continue;
   if (fabs(eta) < 1.4) continue;
 
@@ -262,7 +321,6 @@ else {
 
 }
 
-
 void Phase2::fillTracks(const edm::Event& e, const edm::EventSetup& es, string Mode) {
 
  nTrack_=0;
@@ -289,7 +347,8 @@ edm::Handle<std::vector<pat::IsolatedTrack>   >  isoTrackHandle;
 }
 
 
-else{ e.getByToken( isoTrackLabel_       ,  isoTrackHandle );
+else{ 
+ e.getByToken( isoTrackLabel_       ,  isoTrackHandle );
  for (std::vector<pat::IsolatedTrack>::const_iterator itrack = isoTrackHandle->begin(); itrack != isoTrackHandle->end(); ++itrack) {
   nTrack_++;
   Float_t pt = itrack->pt();

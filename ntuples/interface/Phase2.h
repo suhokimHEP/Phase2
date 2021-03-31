@@ -8,39 +8,39 @@
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
 #include "FWCore/ServiceRegistry/interface/Service.h"
 #include "CommonTools/UtilAlgos/interface/TFileService.h"
-#include "SimDataFormats/PileupSummaryInfo/interface/PileupSummaryInfo.h"
-#include "SimDataFormats/GeneratorProducts/interface/GenEventInfoProduct.h"
-#include "SimDataFormats/GeneratorProducts/interface/LHEEventProduct.h"
-#include "DataFormats/HepMCCandidate/interface/GenParticle.h"
-#include "DataFormats/HLTReco/interface/TriggerEvent.h"
 #include "HLTrigger/HLTcore/interface/HLTConfigProvider.h"
 #include "HLTrigger/HLTcore/interface/HLTPrescaleProvider.h"
-#include "DataFormats/PatCandidates/interface/TriggerObjectStandAlone.h"
 #include "DataFormats/Common/interface/TriggerResults.h"
+#include "DataFormats/PatCandidates/interface/TriggerObjectStandAlone.h"
 #include "DataFormats/PatCandidates/interface/Electron.h"
 #include "DataFormats/PatCandidates/interface/MET.h"
 #include "DataFormats/PatCandidates/interface/Muon.h"
 #include "DataFormats/PatCandidates/interface/Photon.h"
-#include "DataFormats/RecoCandidate/interface/RecoEcalCandidate.h"
-#include "DataFormats/VertexReco/interface/Vertex.h"
 #include "DataFormats/PatCandidates/interface/Jet.h"
 #include "DataFormats/PatCandidates/interface/Tau.h"
+#include "DataFormats/PatCandidates/interface/PackedTriggerPrescales.h"
+#include "DataFormats/RecoCandidate/interface/RecoEcalCandidate.h"
+#include "DataFormats/HepMCCandidate/interface/GenParticle.h"
+#include "DataFormats/HLTReco/interface/TriggerEvent.h"
+#include "DataFormats/VertexReco/interface/Vertex.h"
+#include "DataFormats/BeamSpot/interface/BeamSpot.h"
 //#include "RecoTracker/Record/interface/NavigationSchoolRecord.h"
 #include "SimDataFormats/CaloHit/interface/PCaloHit.h"
+#include "SimDataFormats/PileupSummaryInfo/interface/PileupSummaryInfo.h"
+#include "SimDataFormats/GeneratorProducts/interface/GenEventInfoProduct.h"
+#include "SimDataFormats/GeneratorProducts/interface/LHEEventProduct.h"
 
 //#include "RecoTracker/DebugTools/interface/GetTrackTrajInfo.h"
 //#include "TrackingTools/TransientTrack/interface/TransientTrackBuilder.h"
 //#include "PhysicsTools/SelectorUtils/interface/PFJetIDSelectionFunctor.h"
-#include "DataFormats/BeamSpot/interface/BeamSpot.h"
 
 #include "MagneticField/Engine/interface/MagneticField.h" 
 
 #include "TrackingTools/GeomPropagators/interface/Propagator.h"
-#include "TrackingTools/GeomPropagators/interface/StateOnTrackerBound.h"
+//#include "TrackingTools/GeomPropagators/interface/StateOnTrackerBound.h"
 #include "TrackingTools/Records/interface/TrackingComponentsRecord.h"
-#include "TrackingTools/Records/interface/TransientTrackRecord.h"
+//#include "TrackingTools/Records/interface/TransientTrackRecord.h"
 
-#include "DataFormats/PatCandidates/interface/PackedTriggerPrescales.h"
 #include "DataFormats/PatCandidates/interface/IsolatedTrack.h"
 #include "DataFormats/HGCRecHit/interface/HGCRecHitCollections.h"
 
@@ -75,11 +75,14 @@ class Phase2 : public edm::EDAnalyzer {
   void branchesRecHit       (TTree*);
 
   void fillGlobalEvent (const edm::Event&, const edm::EventSetup&, string Mode);
-  void fillMuons       (const edm::Event&, const reco::Vertex, string Mode);
+  void fillMuons       (const edm::Event&, const edm::EventSetup& es, const reco::Vertex, string Mode);
   void fillTrigger     (const edm::Event&, const edm::EventSetup&);
   void fillGenPart     (const edm::Event&);
   void fillTracks        (const edm::Event&, const edm::EventSetup&, string Mode);
   void fillHGCalHit   (const edm::Event&, const edm::EventSetup&, string Mode, string HGCMode);
+
+  void fill_simhit_tree_(const edm::Event& e, const edm::EventSetup&, const std::vector<PCaloHit>& hits);
+  void fill_rechit_tree_(const edm::Event& e, const edm::EventSetup&, const HGCRecHitCollection& hits);
 
   bool doAOD_     ; 
   string doMiniAOD_ ; 
@@ -146,12 +149,11 @@ class Phase2 : public edm::EDAnalyzer {
   // shared between miniAOD jets and AOD jets modules
   edm::Handle<double>                 rhoHandle;
   edm::Handle<reco::VertexCollection> vtxHandle;
-  vector<vector<float>> muEtaPhi_;
-  // jet functions
+
+
   vector<int> getJetTrackIndexs( float jeteta, float jetphi);
   vector<float> CalTrackdR( float jeteta, float jetphi);
-  void fill_simhit_tree_(const edm::Event& e, const edm::EventSetup&, const std::vector<PCaloHit>& hits);
-  void fill_rechit_tree_(const edm::Event& e, const edm::EventSetup&, const HGCRecHitCollection& hits);
+  void SimRecMatch( vector<pair<uint32_t,float>> simpair, vector<pair<uint32_t,float>> recpair, vector<float>& simE, vector<float>& recE,vector<int>SimLayer,vector<int>& Layer);
 
 
 
@@ -160,6 +162,10 @@ class Phase2 : public edm::EDAnalyzer {
 
 
 
+
+
+  vector<vector<float>> muEtaPhi_;
+  vector<GlobalPoint>  MuPropTrkHit_;
 
 
 

@@ -1,6 +1,6 @@
 #include "Phase2/ntuples/interface/Phase2.h"
-#include "DataFormats/PatCandidates/interface/IsolatedTrack.h"
-#include "DataFormats/HGCRecHit/interface/HGCRecHitCollections.h"
+//#include "DataFormats/PatCandidates/interface/IsolatedTrack.h"
+//#include "DataFormats/HGCRecHit/interface/HGCRecHitCollections.h"
 
 using namespace std;
 using namespace edm;
@@ -90,7 +90,7 @@ void Phase2::analyze(const edm::Event& e, const edm::EventSetup& es) {
       break;
     }   
   }
-   fillMuons(e, vtx,doMiniAOD_); //muons use vtx for isolation
+   fillMuons(e,es, vtx,doMiniAOD_); //muons use vtx for isolation
    fillHGCalHit(e,es,doMiniAOD_,HGCMode_);
 }
   else if(doMiniAOD_.find("RAW")!= std::string::npos){
@@ -117,7 +117,7 @@ void Phase2::analyze(const edm::Event& e, const edm::EventSetup& es) {
       break;
     }   
   }
-   fillMuons(e, vtx,doMiniAOD_); //muons use vtx for isolation
+   fillMuons(e, es,vtx,doMiniAOD_); //muons use vtx for isolation
 
 }
  hEvents_->Fill(1.);

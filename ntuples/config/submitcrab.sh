@@ -3,7 +3,7 @@
 # do we submit or just generate submit scripts
 dosubmit=false
 mode='reco'
-nversion='Phase2'
+nversion='Phase2_Rechit'
 # make the directory where we'll submit from
 thesubdir="./gitignore/${nversion}"
 mkdir -p ${thesubdir}

@@ -44,37 +44,6 @@ process.load('Configuration.Geometry.GeometryExtended2026D49Reco_cff')
 
 
 
-########################  BadPFMuonFilter
-#process.load('RecoMET.METFilters.BadPFMuonFilter_cfi')
-#process.BadPFMuonFilter.muons = cms.InputTag('slimmedMuons', '', 'PAT')
-#process.BadPFMuonFilter.PFCandidates = cms.InputTag('packedPFCandidates', '', 'PAT')
-#
-########################  BadChargedCandidateFilter             
-#process.load('RecoMET.METFilters.BadChargedCandidateFilter_cfi')
-#process.BadChargedCandidateFilter.muons = cms.InputTag('slimmedMuons', '', 'PAT')
-#process.BadChargedCandidateFilter.PFCandidates = cms.InputTag('packedPFCandidates', '', 'PAT')
-#
-#process.lldjMETFiltersSequence = cms.Sequence(
-#     process.BadPFMuonFilter *
-#     process.BadChargedCandidateFilter 
-#)
-
-###########################################################################################
-## For AOD Track variables
-## 
-#process.MaterialPropagator = cms.ESProducer('PropagatorWithMaterialESProducer',
-#    ComponentName = cms.string('PropagatorWithMaterial'),
-#    Mass = cms.double(0.105),
-#    MaxDPhi = cms.double(1.6),
-#    PropagationDirection = cms.string('alongMomentum'),
-#    SimpleMagneticField = cms.string(''),
-#    ptMin = cms.double(-1.0),
-#    useRungeKutta = cms.bool(False)
-#)
-#
-#process.TransientTrackBuilderESProducer = cms.ESProducer('TransientTrackBuilderESProducer',
-#    ComponentName = cms.string('TransientTrackBuilder')
-#)
 
 #NTuplizer
 process.Phase2 = cms.EDAnalyzer('Phase2',
@@ -108,9 +77,6 @@ process.Phase2 = cms.EDAnalyzer('Phase2',
  EERecHits = cms.InputTag('HGCalRecHit','HGCEERecHits','RECO'),
  FHRecHits = cms.InputTag('HGCalRecHit','HGCHEFRecHits','RECO'),
  BHRecHits = cms.InputTag('HGCalRecHit','HGCHEBRecHits','RECO'),
- #EERecHits = cms.InputTag('HGCalRecHit:HGCEERecHits'),
- #FHRecHits = cms.InputTag('HGCalRecHit:HGCHEFRecHits'),
- #BHRecHits = cms.InputTag('HGCalRecHit:HGCHEBRecHits'),
 
 )
 
