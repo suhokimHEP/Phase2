@@ -51,6 +51,15 @@ vector<int>  HGCRechitSithick_;
 vector<float>  muHGCRHEn_;
 vector<int>  muHGCRHLayer_;
 vector<float>  muHGCRHdR_;
+vector<float>  DenmuHGCRHEn_;
+vector<int>  DenmuHGCRHLayer_;
+vector<float>  DenmuHGCRHEta_;
+vector<float>  p2muHGCRHEn_;
+vector<int>  p2muHGCRHLayer_;
+vector<float>  p2muHGCRHEta_;
+vector<float>  p2muHGCRHPhi_;
+
+vector<float>  muPropEta_;
 
 vector<DetId>  muPropId_;
 vector<DetId>  RechitId_;
@@ -88,6 +97,14 @@ void Phase2::branchesRecHit(TTree* tree) {
   tree->Branch("muHGCRHEn"                   , &muHGCRHEn_);
   tree->Branch("muHGCRHLayer"                   , &muHGCRHLayer_);
   tree->Branch("muHGCRHdR"                   , &muHGCRHdR_);
+  tree->Branch("DenmuHGCRHEn"                   , &DenmuHGCRHEn_);
+  tree->Branch("DenmuHGCRHLayer"                   , &DenmuHGCRHLayer_);
+  tree->Branch("DenmuHGCRHEta"                   , &DenmuHGCRHEta_);
+  tree->Branch("p2muHGCRHEn"                   , &p2muHGCRHEn_);
+  tree->Branch("p2muHGCRHLayer"                   , &p2muHGCRHLayer_);
+  tree->Branch("p2muHGCRHEta"                   , &p2muHGCRHEta_);
+  tree->Branch("p2muHGCRHPhi"                   , &p2muHGCRHPhi_);
+  tree->Branch("muPropEta"                   , &muPropEta_);
   tree->Branch("MatchedSimE"                   , &MatchedSimE_);
   tree->Branch("MatchedRecE"                   , &MatchedRecE_);
   tree->Branch("MatchedELayer"                   , &MatchedELayer_);
@@ -251,6 +268,14 @@ void Phase2::fill_rechit_tree_(const edm::Event& event, const edm::EventSetup& e
  muHGCRHEn_.clear();
  muHGCRHLayer_.clear();
  muHGCRHdR_.clear();
+ DenmuHGCRHEn_.clear();
+ DenmuHGCRHLayer_.clear();
+ DenmuHGCRHEta_.clear();
+ p2muHGCRHEn_.clear();
+ p2muHGCRHLayer_.clear();
+ p2muHGCRHEta_.clear();
+ p2muHGCRHPhi_.clear();
+ muPropEta_.clear();
  muPropId_.clear();
  RechitId_.clear();
  recIdEn_.clear();
@@ -309,6 +334,7 @@ void Phase2::fill_rechit_tree_(const edm::Event& event, const edm::EventSetup& e
     float rechitphi ;
     int rechitlayer ;
     float muhitdR;
+    bool withineta;
   for (unsigned int l = 0; l < MuPropTrkHit_.size(); ++l) {
     temp = MuPropTrkHit_[l];
     mudetID=geom0BH->getClosestCell(temp); 
@@ -317,8 +343,15 @@ void Phase2::fill_rechit_tree_(const edm::Event& event, const edm::EventSetup& e
     muphi = -999.;
     mueta = temp.eta();
     muphi = temp.phi();
+    muPropEta_.push_back(mueta);
     int layer = l % 14;	
     layer += 37;
+    bool onlyone = true;
+    withineta = TestEta(mueta,layer);
+    if(withineta){
+    //DenmuHGCRHEn_.push_back(rechiten);
+    DenmuHGCRHLayer_.push_back(layer);
+    DenmuHGCRHEta_.push_back(mueta);
      //std::cout<<layer<<":---------Layer"<<std::endl;
   for (unsigned int j = 0; j < HGCRechitEnEtaPhiLayer_.size(); ++j) {
     rechitlayer  = get<3>(HGCRechitEnEtaPhiLayer_[j]);
@@ -336,10 +369,47 @@ void Phase2::fill_rechit_tree_(const edm::Event& event, const edm::EventSetup& e
     muHGCRHEn_.push_back(rechiten);
     muHGCRHLayer_.push_back(rechitlayer);
     muHGCRHdR_.push_back(muhitdR);
+    if((muhitdR<0.02) && onlyone)
+	{
+    p2muHGCRHEn_.push_back(rechiten);
+    p2muHGCRHLayer_.push_back(rechitlayer);
+    p2muHGCRHEta_.push_back(rechiteta);
+    p2muHGCRHPhi_.push_back(rechitphi);
+	onlyone=false;
+	}
+
+
+	}
 	}
 	}
 	}
 }
+
+
+bool Phase2::TestEta( float rechiteta, int rechitlayer)
+{
+bool withineta = false;
+switch(rechitlayer){
+case 37:{ if(rechiteta>1.45 && rechiteta<1.7) withineta = true;} break;
+case 38:{ if(rechiteta>1.45 && rechiteta<1.73) withineta = true;} break;
+case 39:{ if(rechiteta>1.43 && rechiteta<1.75) withineta = true;} break;
+case 40:{ if(rechiteta>1.40 && rechiteta<1.75) withineta = true;} break;
+case 41:{ if(rechiteta>1.40 && rechiteta<1.87) withineta = true;} break;
+case 42:{ if(rechiteta>1.37 && rechiteta<1.9) withineta = true;} break;
+case 43:{ if(rechiteta>1.35 && rechiteta<2.05) withineta = true;} break;
+case 44:{ if(rechiteta>1.35 && rechiteta<2.07) withineta = true;} break;
+case 45:{ if(rechiteta>1.35 && rechiteta<2.08) withineta = true;} break;
+case 46:{ if(rechiteta>1.38 && rechiteta<2.1) withineta = true;} break;
+case 47:{ if(rechiteta>1.4 && rechiteta<2.25) withineta = true;} break;
+case 48:{ if(rechiteta>1.4 && rechiteta<2.27) withineta = true;} break;
+case 49:{ if(rechiteta>1.43 && rechiteta<2.3) withineta = true;} break;
+case 50:{ if(rechiteta>1.48 && rechiteta<2.3) withineta = true;} break;
+
+}
+return withineta;
+}
+
+
 
 
 

@@ -174,7 +174,7 @@ void Phase2::fillMuons(const edm::Event& e, const edm::EventSetup& es,reco::Vert
   Float_t phi = iMu->phi();
   FreeTrajectoryState fts;
   if (pt < 20) continue;
-  if (fabs(eta) > 3.0) continue;
+  if (fabs(eta) > 2.5) continue;
   if (fabs(eta) < 1.4) continue;
   if (! (iMu->isPFMuon() || iMu->isGlobalMuon() || iMu->isTrackerMuon())) continue;
   const reco::Muon &recoMu = dynamic_cast<const reco::Muon &>(*iMu);

@@ -121,6 +121,7 @@ void Phase2::fillGenPart(const edm::Event& e) {
     vector<int> W_daughterPt_;
     vector<int> W_daughterEta_;
     vector<int> W_daughterPhi_;
+    //if( abs(ip->pdgId()) == 24 ){
     if( abs(ip->pdgId()) == 24 && ip->isLastCopy()){
      Wpt.push_back  ( ip->pt() );
      Wmass.push_back( ip->mass() );

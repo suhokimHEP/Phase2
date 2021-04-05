@@ -43,7 +43,7 @@ process.source = cms.Source('PoolSource',
 )
 # output name
 #process.TFileService = cms.Service('TFileService', fileName = cms.string('Relval_Reco.root'));
-process.TFileService = cms.Service('TFileService', fileName = cms.string('20GeVBHTTBar_Reco.root'));
+process.TFileService = cms.Service('TFileService', fileName = cms.string('7GeVBHTTBar_Reco.root'));
 
 # global tag
 process.load('Configuration.StandardSequences.Services_cff')

@@ -154,6 +154,7 @@ class Phase2 : public edm::EDAnalyzer {
   vector<int> getJetTrackIndexs( float jeteta, float jetphi);
   vector<float> CalTrackdR( float jeteta, float jetphi);
   void SimRecMatch( vector<pair<uint32_t,float>> simpair, vector<pair<uint32_t,float>> recpair, vector<float>& simE, vector<float>& recE,vector<int>SimLayer,vector<int>& Layer);
+  bool TestEta( float rechiteta, int rechitlayer);
 
 
 

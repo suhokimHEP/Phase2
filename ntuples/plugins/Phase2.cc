@@ -100,6 +100,7 @@ void Phase2::analyze(const edm::Event& e, const edm::EventSetup& es) {
 }
  else {
    fillGlobalEvent(e, es,doMiniAOD_);
+  fillGenPart(e);
 
   fillTracks(e, es,doMiniAOD_);
   // muons use vtx for isolation
