@@ -44,7 +44,7 @@ vector<DetId>  HGCRechitID_;
 vector<GlobalPoint>  HGCRechitGP_;
 vector<float>  HGCRechitEta_;
 vector<float>  HGCRechitPhi_;
-vector<tuple<float,float,float,int>> HGCRechitEnEtaPhiLayer_;
+vector<tuple<float,float,float,int,float,float>> HGCRechitEnEtaPhiLayer_;
 vector<int>  HGCRechitLayer_;
 vector<int>  HGCRechitSithick_;
 
@@ -54,9 +54,15 @@ vector<float>  muHGCRHdR_;
 vector<float>  DenmuHGCRHEn_;
 vector<int>  DenmuHGCRHLayer_;
 vector<float>  DenmuHGCRHEta_;
+vector<float>  DenmuHGCRHX_;
+vector<float>  DenmuHGCRHY_;
+vector<float>  DenmuHGCRHR_;
 vector<float>  p2muHGCRHEn_;
 vector<int>  p2muHGCRHLayer_;
 vector<float>  p2muHGCRHEta_;
+vector<float>  p2muHGCRHX_;
+vector<float>  p2muHGCRHY_;
+vector<float>  p2muHGCRHR_;
 vector<float>  p2muHGCRHPhi_;
 
 vector<float>  muPropEta_;
@@ -100,9 +106,15 @@ void Phase2::branchesRecHit(TTree* tree) {
   tree->Branch("DenmuHGCRHEn"                   , &DenmuHGCRHEn_);
   tree->Branch("DenmuHGCRHLayer"                   , &DenmuHGCRHLayer_);
   tree->Branch("DenmuHGCRHEta"                   , &DenmuHGCRHEta_);
+  tree->Branch("DenmuHGCRHX"                   , &DenmuHGCRHX_);
+  tree->Branch("DenmuHGCRHY"                   , &DenmuHGCRHY_);
+  tree->Branch("DenmuHGCRHR"                   , &DenmuHGCRHR_);
   tree->Branch("p2muHGCRHEn"                   , &p2muHGCRHEn_);
   tree->Branch("p2muHGCRHLayer"                   , &p2muHGCRHLayer_);
   tree->Branch("p2muHGCRHEta"                   , &p2muHGCRHEta_);
+  tree->Branch("p2muHGCRHX"                   , &p2muHGCRHX_);
+  tree->Branch("p2muHGCRHY"                   , &p2muHGCRHY_);
+  tree->Branch("p2muHGCRHR"                   , &p2muHGCRHR_);
   tree->Branch("p2muHGCRHPhi"                   , &p2muHGCRHPhi_);
   tree->Branch("muPropEta"                   , &muPropEta_);
   tree->Branch("MatchedSimE"                   , &MatchedSimE_);
@@ -271,9 +283,15 @@ void Phase2::fill_rechit_tree_(const edm::Event& event, const edm::EventSetup& e
  DenmuHGCRHEn_.clear();
  DenmuHGCRHLayer_.clear();
  DenmuHGCRHEta_.clear();
+ DenmuHGCRHX_.clear();
+ DenmuHGCRHY_.clear();
+ DenmuHGCRHR_.clear();
  p2muHGCRHEn_.clear();
  p2muHGCRHLayer_.clear();
  p2muHGCRHEta_.clear();
+ p2muHGCRHX_.clear();
+ p2muHGCRHY_.clear();
+ p2muHGCRHR_.clear();
  p2muHGCRHPhi_.clear();
  muPropEta_.clear();
  muPropId_.clear();
@@ -303,7 +321,8 @@ void Phase2::fill_rechit_tree_(const edm::Event& event, const edm::EventSetup& e
     //std::cout<<"rechitPosition:"<<Position<<std::endl;
     float eta = Position.eta();
     float phi = Position.phi();
-    
+    float GPx = Position.x();
+    float GPy = Position.y();
     HGCRechitEnergy_.push_back(Energy);
     HGCRechitID_.push_back(detId);
     HGCRechitGP_.push_back(Position);   
@@ -314,7 +333,7 @@ void Phase2::fill_rechit_tree_(const edm::Event& event, const edm::EventSetup& e
     HGCRechitSithick_.push_back(ithickness);   
     int ilayer = rhtools_.getLayerWithOffset(detId);
     HGCRechitLayer_.push_back(ilayer);   
-    HGCRechitEnEtaPhiLayer_.push_back(make_tuple(Energy,eta,phi,ilayer));
+    HGCRechitEnEtaPhiLayer_.push_back(make_tuple(Energy,eta,phi,ilayer,GPx,GPy));
 
    Idvar={}; 
    Idvar = std::make_pair(detId.rawId(),Energy);
@@ -329,9 +348,15 @@ void Phase2::fill_rechit_tree_(const edm::Event& event, const edm::EventSetup& e
     GlobalPoint temp;
     float mueta;
     float muphi;
+    float mux;
+    float muy;
+    float mur;
     float rechiten ;
     float rechiteta ;
     float rechitphi ;
+    float rechitx ;
+    float rechity ;
+    float rechitr ;
     int rechitlayer ;
     float muhitdR;
     bool withineta;
@@ -343,21 +368,23 @@ void Phase2::fill_rechit_tree_(const edm::Event& event, const edm::EventSetup& e
     muphi = -999.;
     mueta = temp.eta();
     muphi = temp.phi();
-    muPropEta_.push_back(mueta);
+    mux = temp.x();
+    muy = temp.y();
+    mur = sqrt(mux*mux+muy*muy);
     int layer = l % 14;	
     layer += 37;
     bool onlyone = true;
     withineta = TestEta(mueta,layer);
     if(withineta){
     //DenmuHGCRHEn_.push_back(rechiten);
+    // std::cout<<layer<<":---------Layer"<<std::endl;
+    // std::cout<<mueta<<":---------mueta"<<std::endl;
     DenmuHGCRHLayer_.push_back(layer);
     DenmuHGCRHEta_.push_back(mueta);
-     //std::cout<<layer<<":---------Layer"<<std::endl;
   for (unsigned int j = 0; j < HGCRechitEnEtaPhiLayer_.size(); ++j) {
     rechitlayer  = get<3>(HGCRechitEnEtaPhiLayer_[j]);
      //std::cout<<rechitlayer<<":rechitlayer"<<std::endl;
 	if(layer==rechitlayer){
-
     rechiten = -999.;
     rechiteta = -999.;
     rechitphi = -999.;
@@ -365,22 +392,36 @@ void Phase2::fill_rechit_tree_(const edm::Event& event, const edm::EventSetup& e
     rechiten   = get<0>(HGCRechitEnEtaPhiLayer_[j]);
     rechiteta  = get<1>(HGCRechitEnEtaPhiLayer_[j]);
     rechitphi  = get<2>(HGCRechitEnEtaPhiLayer_[j]);
+    rechitx  = get<4>(HGCRechitEnEtaPhiLayer_[j]);
+    rechity  = get<5>(HGCRechitEnEtaPhiLayer_[j]);
+    rechitr = sqrt(rechitx*rechitx+rechity*rechity);
     muhitdR = deltaR(mueta,muphi,rechiteta,rechitphi); 	
     muHGCRHEn_.push_back(rechiten);
     muHGCRHLayer_.push_back(rechitlayer);
     muHGCRHdR_.push_back(muhitdR);
     if((muhitdR<0.02) && onlyone)
 	{
+    p2muHGCRHEta_.push_back(mueta);
+    // std::cout<<mueta<<":---------Matchedmueta"<<std::endl;
     p2muHGCRHEn_.push_back(rechiten);
     p2muHGCRHLayer_.push_back(rechitlayer);
-    p2muHGCRHEta_.push_back(rechiteta);
     p2muHGCRHPhi_.push_back(rechitphi);
+    p2muHGCRHX_.push_back(mux);
+    p2muHGCRHY_.push_back(muy);
+    p2muHGCRHR_.push_back(mur);
+    //p2muHGCRHX_.push_back(rechitx);
+    //p2muHGCRHY_.push_back(rechity);
+    //p2muHGCRHR_.push_back(rechitr);
+    mux = rechitx;
+    muy = rechity;
+    mur = rechitr;
 	onlyone=false;
 	}
-
-
 	}
 	}
+    DenmuHGCRHX_.push_back(mux);
+    DenmuHGCRHY_.push_back(muy);
+    DenmuHGCRHR_.push_back(mur);
 	}
 	}
 }

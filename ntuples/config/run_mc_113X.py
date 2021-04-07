@@ -8,13 +8,14 @@ process = cms.Process('Phase2')
 #process.options = cms.untracked.PSet( allowUnscheduled = cms.untracked.bool(True) )
 # log output
 process.load('FWCore.MessageLogger.MessageLogger_cfi')
-process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )  ## number of events -1 does all
+process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(1000) )  ## number of events -1 does all
 process.MessageLogger.cerr.FwkReport.reportEvery = 100
 
 # input files
 process.source = cms.Source('PoolSource',
                             fileNames = cms.untracked.vstring(
 
+#'root://cms-xrd-global.cern.ch//store/relval/CMSSW_11_3_0_pre2/RelValZMM_14/MINIAODSIM/PU25ns_113X_mcRun4_realistic_v2_2026D49PU200-v2/10000/0ee38d57-d2d9-49c6-aca8-0496d4c773e7.root',
 'root://cms-xrd-global.cern.ch//store/mc/Phase2HLTTDRSummer20ReRECOMiniAOD/WJetsToLNu_TuneCP5_14TeV-amcatnloFXFX-pythia8/GEN-SIM-DIGI-RAW-MINIAOD/PU200_111X_mcRun4_realistic_T15_v1-v1/260000/016F48F9-F967-8E46-B1DF-5B382572DB60.root',
 
  ),
@@ -72,6 +73,7 @@ process.load('Configuration.Geometry.GeometryExtended2026D49Reco_cff')
 #process.TransientTrackBuilderESProducer = cms.ESProducer('TransientTrackBuilderESProducer',
 #    ComponentName = cms.string('TransientTrackBuilder')
 #)
+process.options.numberOfThreads=cms.untracked.uint32(8)
 
 #NTuplizer
 process.Phase2 = cms.EDAnalyzer('Phase2',

@@ -25,13 +25,14 @@ cp ${msubmitconfig}  ${thesubdir}
 
 # sample names to run over
 samples=( \
-"WJetsToLNu"                   \
+"ZMM"                   \
+#"WJetsToLNu"                   \
 )
 # loop over mc samples
 for samplename in ${samples[@]}
 do
- #datasetname="/RelValZMM_14/CMSSW_11_3_0_pre2-PU25ns_113X_mcRun4_realistic_v2_2026D49PU200-v2/GEN-SIM-RECO"
- datasetname="/WJetsToLNu_TuneCP5_14TeV-amcatnloFXFX-pythia8/Phase2HLTTDRSummer20ReRECOMiniAOD-PU200_111X_mcRun4_realistic_T15_v1-v1/GEN-SIM-DIGI-RAW-MINIAOD"
+ datasetname="/RelValZMM_14/CMSSW_11_3_0_pre2-PU25ns_113X_mcRun4_realistic_v2_2026D49PU200-v2/GEN-SIM-RECO"
+ #datasetname="/WJetsToLNu_TuneCP5_14TeV-amcatnloFXFX-pythia8/Phase2HLTTDRSummer20ReRECOMiniAOD-PU200_111X_mcRun4_realistic_T15_v1-v1/GEN-SIM-DIGI-RAW-MINIAOD"
 
  submitname="submit_${samplename}"
  submitfile="${thesubdir}/${submitname}.py"
